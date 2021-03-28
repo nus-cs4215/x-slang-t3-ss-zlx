@@ -1,6 +1,7 @@
 import * as es from 'estree'
 
-import { parse as sourceParse } from '../parser/parser'
+const Parser = require("../parser/parser.js");
+// import { parse as sourceParse } from '../parser/parser'
 import { Context, Value } from '../types'
 import { oneLine } from '../utils/formatters'
 import { vector_to_list } from './list'
@@ -433,7 +434,7 @@ function transform(node: es.Node) {
 }
 
 export function parse(x: string, context: Context): Value {
-  const program = sourceParse(x, context)
+  const program = Parser.parse(x)
   if (context.errors.length > 0) {
     throw new ParseError(context.errors[0].explain())
   }

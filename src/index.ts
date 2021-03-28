@@ -3,8 +3,11 @@ import { Program, SourceLocation } from 'estree'
 import { SourceMapConsumer } from 'source-map'
 import createContext from './createContext'
 import { findDeclarationNode, findIdentifierNode } from './finder'
-import { evaluate } from './interpreter/interpreter'
-import { parse } from './parser/parser'
+// import { evaluate } from './interpreter/interpreter'
+// import { parse } from './parser/parser'
+// const Parser = require("./parser/parser.js");
+import { Parser } from './parser/parser';
+const Interpreter = require("./interpreter/interpreter.js");
 import {
   Error as ResultError,
   ExecutionMethod,
@@ -57,7 +60,7 @@ if (typeof window !== 'undefined') {
 // deals with parsing error objects and converting them to strings (for repl at least)
 
 const verboseErrors = false
-const resolvedErrorPromise = Promise.resolve({ status: 'error' } as Result)
+// const resolvedErrorPromise = Promise.resolve({ status: 'error' } as Result)
 
 export function parseError(errors: SourceError[], verbose: boolean = verboseErrors): string {
   const errorMessagesArr = errors.map(error => {
@@ -82,7 +85,7 @@ export function findDeclaration(
   context: Context,
   loc: { line: number; column: number }
 ): SourceLocation | null | undefined {
-  const program = parse(code, context)
+  const program = Parser.parse(code)
   if (!program) {
     return null
   }
@@ -102,7 +105,7 @@ export function hasDeclaration(
   context: Context,
   loc: { line: number; column: number }
 ): boolean {
-  const program = parse(code, context)
+  const program = Parser.parse(code)
   if (!program) {
     return false
   }
@@ -119,7 +122,7 @@ export function hasDeclaration(
 }
 
 function typedParse(code: any, context: Context) {
-  const program: Program | undefined = parse(code, context)
+  const program: Program | undefined = Parser.parse(code)
   if (program === undefined) {
     return null
   }
@@ -231,25 +234,24 @@ export async function runInContext(
   const theOptions: IOptions = { ...DEFAULT_OPTIONS, ...options }
   context.variant = determineVariant(context, options)
   context.errors = []
+  const program = Parser.parse(code)
+  // if (!program) {
+  //   return resolvedErrorPromise
+  // }
+  // validateAndAnnotate(program as Program, context)
+  // typeCheck(program, context)
+  // if (context.errors.length > 0) {
+  //   return resolvedErrorPromise
+  // }
 
-  const program = parse(code, context)
-  if (!program) {
-    return resolvedErrorPromise
-  }
-  validateAndAnnotate(program as Program, context)
-  typeCheck(program, context)
-  if (context.errors.length > 0) {
-    return resolvedErrorPromise
-  }
-
-  if (context.prelude !== null) {
-    const prelude = context.prelude
-    context.prelude = null
-    await runInContext(prelude, context, { ...options, isPrelude: true })
-    return runInContext(code, context, options)
-  }
-
-  const it = evaluate(program, context)
+  // if (context.prelude !== null) {
+  //   const prelude = context.prelude
+  //   context.prelude = null
+  //   await runInContext(prelude, context, { ...options, isPrelude: true })
+  //   return runInContext(code, context, options)
+  // }
+  console.log(program);
+  const it = Interpreter.interpreter_evaluate(program)
   const scheduler: Scheduler = new PreemptiveScheduler(theOptions.steps)
   return scheduler.run(it, context)
 }
