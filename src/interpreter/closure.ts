@@ -9,12 +9,18 @@ import {
   identifier,
   returnStatement
 } from '../utils/astCreator'
-const Interpreter = require("./interpreter/interpreter.js");
+const Interpreter = require('./interpreter/interpreter.js')
 
 const closureToJS = (value: Closure, context: Context, klass: string) => {
   function DummyClass(this: Closure) {
     const args: Value[] = Array.prototype.slice.call(arguments)
-    const gen = Interpreter.apply(context, value, args, callExpression(identifier(klass), args), this)
+    const gen = Interpreter.apply(
+      context,
+      value,
+      args,
+      callExpression(identifier(klass), args),
+      this
+    )
     let it = gen.next()
     while (!it.done) {
       it = gen.next()

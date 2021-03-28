@@ -6,8 +6,8 @@ import { findDeclarationNode, findIdentifierNode } from './finder'
 // import { evaluate } from './interpreter/interpreter'
 // import { parse } from './parser/parser'
 // const Parser = require("./parser/parser.js");
-import { Parser } from './parser/parser';
-const Interpreter = require("./interpreter/interpreter.js");
+import { Parser } from './parser/parser'
+const Interpreter = require('./interpreter/interpreter.js')
 import {
   Error as ResultError,
   ExecutionMethod,
@@ -250,7 +250,7 @@ export async function runInContext(
   //   await runInContext(prelude, context, { ...options, isPrelude: true })
   //   return runInContext(code, context, options)
   // }
-  console.log(program);
+  console.log(program)
   const it = Interpreter.interpreter_evaluate(program)
   const scheduler: Scheduler = new PreemptiveScheduler(theOptions.steps)
   return scheduler.run(it, context)

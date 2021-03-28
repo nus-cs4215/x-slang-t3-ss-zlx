@@ -1,6 +1,6 @@
 import * as es from 'estree'
 
-const Parser = require("../parser/parser.js");
+const Parser = require('../parser/parser.js')
 // import { parse as sourceParse } from '../parser/parser'
 import { Context, Value } from '../types'
 import { oneLine } from '../utils/formatters'
