@@ -11,6 +11,7 @@ import * as create from './astCreator'
 import * as rttc from './rttc'
 import { Thunk } from '../types'
 import { makeWrapper } from '../utils/makeWrapper'
+import { Node } from 'acorn'
 
 export function forceIt(val: Thunk | any): any {
   if (val !== undefined && val !== null && val.isMemoized !== undefined) {

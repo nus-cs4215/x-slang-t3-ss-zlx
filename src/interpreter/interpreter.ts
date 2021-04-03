@@ -5,7 +5,11 @@ import * as errors from '../errors/errors'
 import { RuntimeSourceError } from '../errors/runtimeSourceError'
 import { Context, Environment, Frame, Value } from '../types'
 import { constantDeclaration, primitive } from '../utils/astCreator'
-import { evaluateBinaryExpression, evaluateConditionalExpression, evaluateUnaryExpression } from '../utils/operators'
+import {
+  evaluateBinaryExpression,
+  evaluateConditionalExpression,
+  evaluateUnaryExpression
+} from '../utils/operators'
 import * as rttc from '../utils/rttc'
 import Closure from './closure'
 
@@ -348,7 +352,10 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     },
 
     WhileStatement: function*(node: es.WhileStatement, context: Context) {
-        throw new Error("While statements not supported in x-slang");
+        // throw new Error("While statements not supported in x-slang");
+        const condition = yield* actualValue(node.condition.value.element, context)
+        // Need to recursively check whether condition is satisfied HERE
+        return condition ? evaluate(node.body, context) : null;
     },
 
     // STRETCH GOAL

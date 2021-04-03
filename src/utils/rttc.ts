@@ -96,7 +96,12 @@ export const checkBinaryExpression = (
   }
 }
 
-export const checkConditionalExpression = (node: es.Node, judge: Value, judgeTrue: Value, judgeFalse: Value) => {
+export const checkConditionalExpression = (
+  node: es.Node,
+  judge: Value,
+  judgeTrue: Value,
+  judgeFalse: Value
+) => {
   return isBool(judge) ? undefined : new TypeError(node, ' as judge', 'boolean', typeOf(judge))
 }
 
