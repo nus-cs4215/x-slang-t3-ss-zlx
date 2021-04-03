@@ -1736,8 +1736,7 @@ class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
 }
 
 export function parse(source: string, context: Context) {
-  console.log(__dirname)
-  source = readFileSync('../../input.py', 'utf-8')
+  source = readFileSync('src/parser/input.py', 'utf-8')
   if (context.variant === 'python') {
     const inputStream = new ANTLRInputStream(source)
     const lexer = new Python3Lexer(inputStream)
