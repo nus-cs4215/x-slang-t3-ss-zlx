@@ -117,7 +117,7 @@ export function unaryOp(operator: UnaryOperator, argument: any, line: number, co
 }
 
 export function evaluateUnaryExpression(operator: UnaryOperator, value: any) {
-  if (operator === '!') {
+  if (operator === 'not') {
     return !value
   } else if (operator === '-') {
     return -value
@@ -158,11 +158,13 @@ export function evaluateBinaryExpression(operator: BinaryOperator, left: any, ri
       return left * right
     case '/':
       return left / right
+    case '//':
+      return Math.floor(left / right)
     case '%':
       return left % right
-    case '===':
+    case '==':
       return left === right
-    case '!==':
+    case '!=':
       return left !== right
     case '<=':
       return left <= right
@@ -172,9 +174,21 @@ export function evaluateBinaryExpression(operator: BinaryOperator, left: any, ri
       return left > right
     case '>=':
       return left >= right
+    case 'and':
+      return left && right
+    case '&':
+      return left & right
+    case 'or':
+      return left || right
+    case '|':
+      return left | right
     default:
       return undefined
   }
+}
+
+export function evaluateConditionalExpression(judge: Boolean, judgeTrue: any, judgeFalse: any) {
+  return judge ? judgeTrue : judgeFalse
 }
 
 /**

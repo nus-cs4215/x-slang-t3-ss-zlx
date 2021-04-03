@@ -47,7 +47,7 @@ const isArray = (v: Value) => typeOf(v) === 'array'
 export const checkUnaryExpression = (node: es.Node, operator: es.UnaryOperator, value: Value) => {
   if ((operator === '+' || operator === '-') && !isNumber(value)) {
     return new TypeError(node, '', 'number', typeOf(value))
-  } else if (operator === '!' && !isBool(value)) {
+  } else if (operator === 'not' && !isBool(value)) {
     return new TypeError(node, '', 'boolean', typeOf(value))
   } else {
     return undefined
@@ -64,7 +64,12 @@ export const checkBinaryExpression = (
     case '-':
     case '*':
     case '/':
+    case '//':
     case '%':
+    case 'and':
+    case '&':
+    case 'or':
+    case '|':
       if (!isNumber(left)) {
         return new TypeError(node, LHS, 'number', typeOf(left))
       } else if (!isNumber(right)) {
@@ -77,8 +82,8 @@ export const checkBinaryExpression = (
     case '<=':
     case '>':
     case '>=':
-    case '!==':
-    case '===':
+    case '!=':
+    case '==':
       if (isNumber(left)) {
         return isNumber(right) ? undefined : new TypeError(node, RHS, 'number', typeOf(right))
       } else if (isString(left)) {
@@ -89,6 +94,10 @@ export const checkBinaryExpression = (
     default:
       return
   }
+}
+
+export const checkConditionalExpression = (node: es.Node, judge: Value, judgeTrue: Value, judgeFalse: Value) => {
+  return isBool(judge) ? undefined : new TypeError(node, ' as judge', 'boolean', typeOf(judge))
 }
 
 export const checkIfStatement = (node: es.Node, test: Value) => {

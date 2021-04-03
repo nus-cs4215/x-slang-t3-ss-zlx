@@ -4,8 +4,8 @@ import * as constants from '../constants'
 import * as errors from '../errors/errors'
 import { RuntimeSourceError } from '../errors/runtimeSourceError'
 import { Context, Environment, Frame, Value } from '../types'
-import { primitive } from '../utils/astCreator'
-import { evaluateBinaryExpression, evaluateUnaryExpression } from '../utils/operators'
+import { constantDeclaration, primitive } from '../utils/astCreator'
+import { evaluateBinaryExpression, evaluateConditionalExpression, evaluateUnaryExpression } from '../utils/operators'
 import * as rttc from '../utils/rttc'
 import Closure from './closure'
 
@@ -210,6 +210,7 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
         return node.quasis[0].value.cooked
     },
 
+    // Not sure if needed in Python 3, because it seems to be for JS
     ThisExpression: function*(node: es.ThisExpression, context: Context) {
         return context.runtime.environments[0].thisContext
     },
@@ -238,6 +239,7 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
         throw new Error("Call expressions not supported in x-slang");
     },
 
+    // Not sure if needed in Python 3, because it seems to be for JS
     NewExpression: function*(node: es.NewExpression, context: Context) {
         const callee = yield* evaluate(node.callee, context)
         const args = []
@@ -276,69 +278,92 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     },
 
     ConditionalExpression: function*(node: es.ConditionalExpression, context: Context) {
-        throw new Error("Conditional expressions not supported in x-slang");
+        const judge = yield* actualValue(node.judge, context)
+        const judgeTrue = yield* actualValue(node.judgeTrue, context)
+        const judgeFalse = yield* actualValue(node.judgeFalse, context)
+        const error = rttc.checkConditionalExpression(node, judge, judgeTrue, judgeFalse)
+        if (error) {
+            return handleRuntimeError(context, error)
+        }
+        return evaluateConditionalExpression(judge, judgeTrue, judgeFalse)
     },
 
-    LogicalExpression: function*(node: es.LogicalExpression, context: Context) {
-        throw new Error("Logical expressions not supported in x-slang");
-    },
+    // Logical Expressions are covered by Unary and Binary Expressions in Python 3
+    // LogicalExpression: function*(node: es.LogicalExpression, context: Context) {
+    //     throw new Error("Logical expressions not supported in x-slang");
+    // },
 
-    VariableDeclaration: function*(node: es.VariableDeclaration, context: Context) {
-        throw new Error("Variable declarations not supported in x-slang");
-    },
+    // Variable Declaration and Assignment Expression are both handled by Assignment in Python 3
+    // VariableDeclaration: function*(node: es.VariableDeclaration, context: Context) {
+    //     throw new Error("Variable declarations not supported in x-slang");
+    // },
 
-    ContinueStatement: function*(node: es.ContinueStatement, context: Context) {
-        throw new Error("Continue statements not supported in x-slang");
-    },
+    // STRETCH GOAL
+    // ContinueStatement: function*(node: es.ContinueStatement, context: Context) {
+    //     throw new Error("Continue statements not supported in x-slang");
+    // },
 
-    BreakStatement: function*(node: es.BreakStatement, context: Context) {
-        throw new Error("Break statements not supported in x-slang");
-    },
+    // STRETCH GOAL
+    // BreakStatement: function*(node: es.BreakStatement, context: Context) {
+    //     throw new Error("Break statements not supported in x-slang");
+    // },
 
     ForStatement: function*(node: es.ForStatement, context: Context) {
         // Create a new block scope for the loop variables
         throw new Error("For statements not supported in x-slang");
     },
 
-    MemberExpression: function*(node: es.MemberExpression, context: Context) {
-        throw new Error("Member statements not supported in x-slang");
-    },
+    // STRETCH GOAL
+    // MemberExpression: function*(node: es.MemberExpression, context: Context) {
+    //     throw new Error("Member statements not supported in x-slang");
+    // },
 
     AssignmentExpression: function*(node: es.AssignmentExpression, context: Context) {
-        throw new Error("Assignment expressions not supported in x-slang");
+        // throw new Error("Assignment expressions not supported in x-slang");
+        const value = yield* actualValue(node.right, context)
+        const symbol = node.left.value
+        // Assign Symbol Value HERE
+        return value
+         
     },
 
     FunctionDeclaration: function*(node: es.FunctionDeclaration, context: Context) {
         throw new Error("Function declarations not supported in x-slang");
+
+        // return yield* evaluate(funcDeclToConstDecl, context)
     },
 
-    IfStatement: function*(node: es.IfStatement | es.ConditionalExpression, context: Context) {
-        throw new Error("If statements not supported in x-slang");
-    },
+    // If Statement and Conditional Expression are both handled by Conditional Expression in Python 3
+    // IfStatement: function*(node: es.IfStatement | es.ConditionalExpression, context: Context) {
+    //     throw new Error("If statements not supported in x-slang");
+    // },
 
     ExpressionStatement: function*(node: es.ExpressionStatement, context: Context) {
         return yield* evaluate(node.expression, context)
     },
 
     ReturnStatement: function*(node: es.ReturnStatement, context: Context) {
-        throw new Error("Return statements not supported in x-slang");
+        const returned = yield* actualValue(node.returned, context)
+        return returned
     },
 
     WhileStatement: function*(node: es.WhileStatement, context: Context) {
         throw new Error("While statements not supported in x-slang");
     },
 
-    ObjectExpression: function*(node: es.ObjectExpression, context: Context) {
-        throw new Error("Object expressions not supported in x-slang");
-    },
+    // STRETCH GOAL
+    // ObjectExpression: function*(node: es.ObjectExpression, context: Context) {
+    //     throw new Error("Object expressions not supported in x-slang");
+    // },
 
     BlockStatement: function*(node: es.BlockStatement, context: Context) {
         throw new Error("Block statements not supported in x-slang");
     },
 
-    ImportDeclaration: function*(node: es.ImportDeclaration, context: Context) {
-        throw new Error("Import declarations not supported in x-slang");
-    },
+    // STRETCH GOAL:
+    // ImportDeclaration: function*(node: es.ImportDeclaration, context: Context) {
+    //     throw new Error("Import declarations not supported in x-slang");
+    // },
 
     Program: function*(node: es.BlockStatement, context: Context) {
         context.numberOfOuterEnvironments += 1
