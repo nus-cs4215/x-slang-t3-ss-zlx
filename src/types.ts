@@ -57,7 +57,7 @@ export interface Comment {
 }
 
 export type ExecutionMethod = 'native' | 'interpreter' | 'auto'
-export type Variant = 'calc'
+export type Variant = 'python'
 
 export interface SourceLanguage {
   variant: Variant

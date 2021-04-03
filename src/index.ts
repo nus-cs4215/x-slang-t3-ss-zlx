@@ -41,7 +41,7 @@ const DEFAULT_OPTIONS: IOptions = {
   steps: 1000,
   stepLimit: 1000,
   executionMethod: 'auto',
-  variant: 'calc',
+  variant: 'python',
   originalMaxExecTime: 1000,
   isPrelude: false
 }

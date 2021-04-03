@@ -107,7 +107,7 @@ const defaultBuiltIns: CustomBuiltIns = {
 }
 
 const createContext = <T>(
-  variant: Variant = 'calc',
+  variant: Variant = 'python',
   externalSymbols: string[] = [],
   externalContext?: T,
   externalBuiltIns: CustomBuiltIns = defaultBuiltIns,

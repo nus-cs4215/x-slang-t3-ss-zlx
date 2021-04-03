@@ -8,7 +8,7 @@ import { sourceLanguages } from '../constants'
 
 function startRepl(
   executionMethod: ExecutionMethod = 'interpreter',
-  variant: Variant = 'calc',
+  variant: Variant = 'python',
   useRepl: boolean,
   prelude = ''
 ) {
@@ -68,7 +68,7 @@ function validChapterVariant(variant: any): boolean {
 function main() {
   const opt = require('node-getopt')
     .create([
-      ['v', 'variant=VARIANT', 'set the Source variant (i.e., calc)', 'calc'],
+      ['v', 'variant=VARIANT', 'set the Source variant (i.e., calc)', 'python'],
       ['h', 'help', 'display this help'],
       ['e', 'eval', "don't show REPL, only display output of evaluation"]
     ])
