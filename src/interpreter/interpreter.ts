@@ -205,60 +205,60 @@ function* evaluateBlockSatement(context: Context, node: es.BlockStatement) {
 // prettier-ignore
 export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     /** Simple Values */
-    Literal: function*(node: es.Literal, context: Context) {
-        return node.value
+    Number: function* (node: es.Number, context: Context) {
+      return node.value
     },
 
-    TemplateLiteral: function*(node: es.TemplateLiteral) {
-        // Expressions like `${1}` are not allowed, so no processing needed
-        return node.quasis[0].value.cooked
+    Bool: function* (node: es.Bool, context: Context) {
+      return node.value
     },
 
-    // Not sure if needed in Python 3, because it seems to be for JS
-    ThisExpression: function*(node: es.ThisExpression, context: Context) {
-        return context.runtime.environments[0].thisContext
+    String: function* (node: es.String, context: Context) {
+      return node.value
     },
+
+    // Literal: function*(node: es.Literal, context: Context) {
+    //     return node.value
+    // },
+
+    // TemplateLiteral: function*(node: es.TemplateLiteral) {
+    //     // Expressions like `${1}` are not allowed, so no processing needed
+    //     return node.quasis[0].value.cooked
+    // },
+
+    // STRETCH GOAL 
+    // Can be converted into SelfExpression to be used in Python 3 Classes
+    // ThisExpression: function*(node: es.ThisExpression, context: Context) {
+    //     return context.runtime.environments[0].thisContext
+    // },
 
     ArrayExpression: function*(node: es.ArrayExpression, context: Context) {
         throw new Error("Array expressions not supported in x-slang");
     },
 
-    DebuggerStatement: function*(node: es.DebuggerStatement, context: Context) {
-        yield
+    // STRETCH GOAL
+    // DebuggerStatement: function*(node: es.DebuggerStatement, context: Context) {
+    //     yield
+    // },
+
+    // STRETCH GOAL
+    // Not needed in Python 3, because it is a JS only type of expression
+    // FunctionExpression: function*(node: es.FunctionExpression, context: Context) {
+    //     throw new Error("Function expressions not supported in x-slang");
+    // },
+
+    // STRETCH GOAL 
+    // ArrowFunctionExpression: function*(node: es.ArrowFunctionExpression, context: Context) {
+    //     throw new Error("Arrow functions expressions not supported in x-slang");
+    // },
+
+    Name: function*(node: es.Name, context: Context) {
+        return node.value
     },
 
-    FunctionExpression: function*(node: es.FunctionExpression, context: Context) {
-        throw new Error("Function expressions not supported in x-slang");
-    },
-
-    ArrowFunctionExpression: function*(node: es.ArrowFunctionExpression, context: Context) {
-        throw new Error("Arrow functions expressions not supported in x-slang");
-    },
-
-    Identifier: function*(node: es.Identifier, context: Context) {
-        throw new Error("Variables not supported in x-slang");
-    },
-
+    // HERE
     CallExpression: function*(node: es.CallExpression, context: Context) {
         throw new Error("Call expressions not supported in x-slang");
-    },
-
-    // Not sure if needed in Python 3, because it seems to be for JS
-    NewExpression: function*(node: es.NewExpression, context: Context) {
-        const callee = yield* evaluate(node.callee, context)
-        const args = []
-        for (const arg of node.arguments) {
-            args.push(yield* evaluate(arg, context))
-        }
-        const obj: Value = {}
-        if (callee instanceof Closure) {
-            obj.__proto__ = callee.fun.prototype
-            callee.fun.apply(obj, args)
-        } else {
-            obj.__proto__ = callee.prototype
-            callee.apply(obj, args)
-        }
-        return obj
     },
 
     UnaryExpression: function*(node: es.UnaryExpression, context: Context) {
@@ -291,16 +291,6 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
         }
         return evaluateConditionalExpression(judge, judgeTrue, judgeFalse)
     },
-
-    // Logical Expressions are covered by Unary and Binary Expressions in Python 3
-    // LogicalExpression: function*(node: es.LogicalExpression, context: Context) {
-    //     throw new Error("Logical expressions not supported in x-slang");
-    // },
-
-    // Variable Declaration and Assignment Expression are both handled by Assignment in Python 3
-    // VariableDeclaration: function*(node: es.VariableDeclaration, context: Context) {
-    //     throw new Error("Variable declarations not supported in x-slang");
-    // },
 
     // STRETCH GOAL
     // ContinueStatement: function*(node: es.ContinueStatement, context: Context) {
@@ -336,11 +326,6 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
 
         // return yield* evaluate(funcDeclToConstDecl, context)
     },
-
-    // If Statement and Conditional Expression are both handled by Conditional Expression in Python 3
-    // IfStatement: function*(node: es.IfStatement | es.ConditionalExpression, context: Context) {
-    //     throw new Error("If statements not supported in x-slang");
-    // },
 
     ExpressionStatement: function*(node: es.ExpressionStatement, context: Context) {
         return yield* evaluate(node.expression, context)
