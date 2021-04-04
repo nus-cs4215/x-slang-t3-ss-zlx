@@ -226,12 +226,6 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     //     return node.quasis[0].value.cooked
     // },
 
-    // STRETCH GOAL 
-    // Can be converted into SelfExpression to be used in Python 3 Classes
-    // ThisExpression: function*(node: es.ThisExpression, context: Context) {
-    //     return context.runtime.environments[0].thisContext
-    // },
-
     ArrayExpression: function*(node: es.ArrayExpression, context: Context) {
         throw new Error("Array expressions not supported in x-slang");
     },
@@ -241,24 +235,8 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     //     yield
     // },
 
-    // STRETCH GOAL
-    // Not needed in Python 3, because it is a JS only type of expression
-    // FunctionExpression: function*(node: es.FunctionExpression, context: Context) {
-    //     throw new Error("Function expressions not supported in x-slang");
-    // },
-
-    // STRETCH GOAL 
-    // ArrowFunctionExpression: function*(node: es.ArrowFunctionExpression, context: Context) {
-    //     throw new Error("Arrow functions expressions not supported in x-slang");
-    // },
-
     Name: function*(node: es.Name, context: Context) {
         return node.value
-    },
-
-    // HERE
-    CallExpression: function*(node: es.CallExpression, context: Context) {
-        throw new Error("Call expressions not supported in x-slang");
     },
 
     UnaryExpression: function*(node: es.UnaryExpression, context: Context) {
@@ -292,6 +270,49 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
         return evaluateConditionalExpression(judge, judgeTrue, judgeFalse)
     },
 
+    AssignmentExpression: function*(node: es.AssignmentExpression, context: Context) {
+      const value = yield* actualValue(node.right, context)
+      const symbol = node.left.value
+      // Assign Symbol Value HERE
+      context.numberOfOuterEnvironments += 1
+      const environment = createBlockEnvironment(context, 'programEnvironment')
+      pushEnvironment(context, environment)
+      return value
+
+      /*
+      function assign_symbol_value(symbol, val, env) {
+        function env_loop(env) {
+          function scan(symbols, vals) {
+            return is_null(symbols)
+              ? env_loop(enclosing_environment(env))
+              : symbol === head(symbols)
+              ? set_head(vals, val)
+              : scan(tail(symbols), tail(vals));
+          }
+          if (env === the_empty_environment) {
+            error(symbol, "unbound name -- assignment");
+          } else {
+            const frame = first_frame(env);
+            return scan(frame_symbols(frame), frame_values(frame));
+          }
+        }
+        return env_loop(env);
+      }
+      */
+    },
+
+    WhileStatement: function*(node: es.WhileStatement, context: Context) {
+      // throw new Error("While statements not supported in x-slang");
+      const condition = yield* actualValue(node.condition.value.element, context)
+      // Need to recursively check whether condition is satisfied HERE
+      return condition ? evaluate(node.body, context) : null;
+    },
+
+    ForStatement: function*(node: es.ForStatement, context: Context) {
+      // Create a new block scope for the loop variables
+      throw new Error("For statements not supported in x-slang");
+    },
+
     // STRETCH GOAL
     // ContinueStatement: function*(node: es.ContinueStatement, context: Context) {
     //     throw new Error("Continue statements not supported in x-slang");
@@ -302,30 +323,31 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     //     throw new Error("Break statements not supported in x-slang");
     // },
 
-    ForStatement: function*(node: es.ForStatement, context: Context) {
-        // Create a new block scope for the loop variables
-        throw new Error("For statements not supported in x-slang");
+    FunctionDeclaration: function*(node: es.FunctionDeclaration, context: Context) {
+      throw new Error("Function declarations not supported in x-slang");
+
+      // return yield* evaluate(funcDeclToConstDecl, context)
+    },
+
+    // HERE
+    CallExpression: function*(node: es.CallExpression, context: Context) {
+      throw new Error("Call expressions not supported in x-slang");
+    },
+
+    BlockStatement: function*(node: es.BlockStatement, context: Context) {
+      throw new Error("Block statements not supported in x-slang");
     },
 
     // STRETCH GOAL
-    // MemberExpression: function*(node: es.MemberExpression, context: Context) {
-    //     throw new Error("Member statements not supported in x-slang");
+    // Not needed in Python 3, because it is a JS only type of expression
+    // FunctionExpression: function*(node: es.FunctionExpression, context: Context) {
+    //     throw new Error("Function expressions not supported in x-slang");
     // },
 
-    AssignmentExpression: function*(node: es.AssignmentExpression, context: Context) {
-        // throw new Error("Assignment expressions not supported in x-slang");
-        const value = yield* actualValue(node.right, context)
-        const symbol = node.left.value
-        // Assign Symbol Value HERE
-        return value
-         
-    },
-
-    FunctionDeclaration: function*(node: es.FunctionDeclaration, context: Context) {
-        throw new Error("Function declarations not supported in x-slang");
-
-        // return yield* evaluate(funcDeclToConstDecl, context)
-    },
+    // STRETCH GOAL 
+    // ArrowFunctionExpression: function*(node: es.ArrowFunctionExpression, context: Context) {
+    //     throw new Error("Arrow functions expressions not supported in x-slang");
+    // },
 
     ExpressionStatement: function*(node: es.ExpressionStatement, context: Context) {
         return yield* evaluate(node.expression, context)
@@ -336,21 +358,22 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
         return returned
     },
 
-    WhileStatement: function*(node: es.WhileStatement, context: Context) {
-        // throw new Error("While statements not supported in x-slang");
-        const condition = yield* actualValue(node.condition.value.element, context)
-        // Need to recursively check whether condition is satisfied HERE
-        return condition ? evaluate(node.body, context) : null;
-    },
 
     // STRETCH GOAL
     // ObjectExpression: function*(node: es.ObjectExpression, context: Context) {
     //     throw new Error("Object expressions not supported in x-slang");
     // },
 
-    BlockStatement: function*(node: es.BlockStatement, context: Context) {
-        throw new Error("Block statements not supported in x-slang");
-    },
+    // STRETCH GOAL
+    // MemberExpression: function*(node: es.MemberExpression, context: Context) {
+    //     throw new Error("Member statements not supported in x-slang");
+    // },
+
+    // STRETCH GOAL 
+    // Can be converted into SelfExpression to be used in Python 3 Classes
+    // ThisExpression: function*(node: es.ThisExpression, context: Context) {
+    //     return context.runtime.environments[0].thisContext
+    // },
 
     // STRETCH GOAL:
     // ImportDeclaration: function*(node: es.ImportDeclaration, context: Context) {
