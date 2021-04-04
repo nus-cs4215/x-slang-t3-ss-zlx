@@ -1,5 +1,6 @@
 import { ancestor, base, FullWalkerCallback } from '../utils/walkers'
-import * as es from 'estree'
+import * as ast from '../parser/ast'
+// import * as es from 'estree'
 import { Context, TypeAnnotatedNode } from '../types'
 import { getVariableDecarationName } from '../utils/astCreator'
 
@@ -9,34 +10,34 @@ class Declaration {
 }
 
 export function validateAndAnnotate(
-  program: es.Program,
+  program: ast.Program,
   context: Context
-): TypeAnnotatedNode<es.Program> {
-  const accessedBeforeDeclarationMap = new Map<es.Node, Map<string, Declaration>>()
-  const scopeHasCallExpressionMap = new Map<es.Node, boolean>()
-  function processBlock(node: es.Program | es.BlockStatement) {
+): TypeAnnotatedNode<ast.Program> {
+  const accessedBeforeDeclarationMap = new Map<ast.Node, Map<string, Declaration>>()
+  const scopeHasCallExpressionMap = new Map<ast.Node, boolean>()
+  function processBlock(node: ast.Program | ast.BlockStatement) {
     const initialisedIdentifiers = new Map<string, Declaration>()
     scopeHasCallExpressionMap.set(node, false)
     accessedBeforeDeclarationMap.set(node, initialisedIdentifiers)
   }
-  function processFunction(node: es.FunctionDeclaration | es.ArrowFunctionExpression) {
+  function processFunction(node: ast.FunctionDeclaration | ast.ArrowFunctionExpression) {
     accessedBeforeDeclarationMap.set(
       node,
-      new Map((node.params as es.Identifier[]).map(id => [id.name, new Declaration(false)]))
+      new Map((node.params as ast.Identifier[]).map(id => [id.name, new Declaration(false)]))
     )
     scopeHasCallExpressionMap.set(node, false)
   }
 
   // initialise scope of variables
-  ancestor(program as es.Node, {
+  ancestor(program as ast.Node, {
     Program: processBlock,
     BlockStatement: processBlock,
     FunctionDeclaration: processFunction,
     ArrowFunctionExpression: processFunction,
-    ForStatement(forStatement: es.ForStatement, ancestors: es.Node[]) {}
+    ForStatement(forStatement: ast.ForStatement, ancestors: ast.Node[]) {}
   })
 
-  function validateIdentifier(id: es.Identifier, ancestors: es.Node[]) {
+  function validateIdentifier(id: ast.Identifier, ancestors: ast.Node[]) {
     const name = id.name
     for (let i = ancestors.length - 1; i >= 0; i--) {
       const a = ancestors[i]
@@ -49,7 +50,7 @@ export function validateAndAnnotate(
   }
   const customWalker = {
     ...base,
-    VariableDeclarator(node: es.VariableDeclarator, st: never, c: FullWalkerCallback<never>) {
+    VariableDeclarator(node: ast.VariableDeclarator, st: never, c: FullWalkerCallback<never>) {
       // don't visit the id
       if (node.init) {
         c(node.init, st, 'Expression')
@@ -59,7 +60,7 @@ export function validateAndAnnotate(
   ancestor(
     program,
     {
-      VariableDeclaration(node: TypeAnnotatedNode<es.VariableDeclaration>, ancestors: es.Node[]) {
+      VariableDeclaration(node: TypeAnnotatedNode<ast.VariableDeclaration>, ancestors: ast.Node[]) {
         const lastAncestor = ancestors[ancestors.length - 2]
         const name = getVariableDecarationName(node)
         const accessedBeforeDeclaration = accessedBeforeDeclarationMap.get(lastAncestor)!.get(name)!
@@ -67,13 +68,13 @@ export function validateAndAnnotate(
         node.typability = accessedBeforeDeclaration ? 'Untypable' : 'NotYetTyped'
       },
       Identifier: validateIdentifier,
-      FunctionDeclaration(node: TypeAnnotatedNode<es.FunctionDeclaration>, ancestors: es.Node[]) {
+      FunctionDeclaration(node: TypeAnnotatedNode<ast.FunctionDeclaration>, ancestors: ast.Node[]) {
         // a function declaration can be typed if there are no function calls in the same scope before it
         const lastAncestor = ancestors[ancestors.length - 2]
         node.typability = scopeHasCallExpressionMap.get(lastAncestor) ? 'Untypable' : 'NotYetTyped'
       },
-      Pattern(node: es.Pattern, ancestors: es.Node[]) {},
-      CallExpression(call: es.CallExpression, ancestors: es.Node[]) {
+      Pattern(node: ast.Pattern, ancestors: ast.Node[]) {},
+      CallExpression(call: ast.CallExpression, ancestors: ast.Node[]) {
         for (let i = ancestors.length - 1; i >= 0; i--) {
           const a = ancestors[i]
           if (scopeHasCallExpressionMap.has(a)) {

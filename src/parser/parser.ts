@@ -117,7 +117,7 @@ export class DisallowedConstructError implements SourceError {
   public severity = ErrorSeverity.ERROR
   public nodeType: string
 
-  constructor(public node: es.Node) {
+  constructor(public node: ast.Node) {
     this.nodeType = this.formatNodeType(this.node.type)
   }
 
@@ -158,7 +158,7 @@ export class DisallowedConstructError implements SourceError {
 export class FatalSyntaxError implements SourceError {
   public type = ErrorType.SYNTAX
   public severity = ErrorSeverity.ERROR
-  public constructor(public location: es.SourceLocation, public message: string) {}
+  public constructor(public location: ast.SourceLocation, public message: string) {}
 
   public explain() {
     return this.message
@@ -172,7 +172,7 @@ export class FatalSyntaxError implements SourceError {
 export class MissingSemicolonError implements SourceError {
   public type = ErrorType.SYNTAX
   public severity = ErrorSeverity.ERROR
-  public constructor(public location: es.SourceLocation) {}
+  public constructor(public location: ast.SourceLocation) {}
 
   public explain() {
     return 'Missing semicolon at the end of statement'
@@ -186,7 +186,7 @@ export class MissingSemicolonError implements SourceError {
 export class TrailingCommaError implements SourceError {
   public type: ErrorType.SYNTAX
   public severity: ErrorSeverity.WARNING
-  public constructor(public location: es.SourceLocation) {}
+  public constructor(public location: ast.SourceLocation) {}
 
   public explain() {
     return 'Trailing comma'
@@ -197,7 +197,7 @@ export class TrailingCommaError implements SourceError {
   }
 }
 
-function contextToLocation(ctx: ExpressionContext): es.SourceLocation {
+function contextToLocation(ctx: ExpressionContext): ast.SourceLocation {
   return {
     start: {
       line: ctx.start.line,
@@ -1730,7 +1730,7 @@ class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
     return { type: 'Integer', value: Number(value) }
   }
 
-  visit(tree: File_inputContext): ast.Expression {
+  visit(tree: File_inputContext): ast.Program {
     return tree.accept(this)
   }
 }
@@ -1749,6 +1749,7 @@ export function parse(source: string, context: Context) {
     const result = visitor.visit(tree)
     console.log('Final Result')
     console.log(JSON.stringify(result))
+    return result
   } else {
     return undefined
   }

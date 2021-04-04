@@ -1,4 +1,5 @@
-import * as es from 'estree'
+// import * as es from 'estree'
+import * as ast from '../parser/ast'
 
 import { parse as sourceParse } from '../parser/parser'
 import { Context, Value } from '../types'
@@ -26,13 +27,13 @@ function unreachable() {
 // can be represented by the element itself,
 // instead of constructing a sequence
 
-function makeSequenceIfNeeded(exs: es.Node[]) {
+function makeSequenceIfNeeded(exs: ast.Node[]) {
   return exs.length === 1
     ? transform(exs[0])
     : vector_to_list(['sequence', vector_to_list(exs.map(transform))])
 }
 
-function makeBlockIfNeeded(exs: es.Node[]) {
+function makeBlockIfNeeded(exs: ast.Node[]) {
   return hasDeclarationAtToplevel(exs)
     ? vector_to_list(['block', makeSequenceIfNeeded(exs)])
     : makeSequenceIfNeeded(exs)
@@ -40,56 +41,56 @@ function makeBlockIfNeeded(exs: es.Node[]) {
 
 // checks if sequence has declaration at toplevel
 // (outside of any block)
-function hasDeclarationAtToplevel(exs: es.Node[]) {
+function hasDeclarationAtToplevel(exs: ast.Node[]) {
   return exs.reduce(
     (b, ex) => b || ex.type === 'VariableDeclaration' || ex.type === 'FunctionDeclaration',
     false
   )
 }
 
-type ASTTransformers = Map<string, (node: es.Node) => Value>
+type ASTTransformers = Map<string, (node: ast.Node) => Value>
 
 const transformers: ASTTransformers = new Map([
   [
     'Program',
-    (node: es.Node) => {
-      node = node as es.Program
+    (node: ast.Node) => {
+      node = node as ast.Program
       return makeSequenceIfNeeded(node.body)
     }
   ],
 
   [
     'BlockStatement',
-    (node: es.BlockStatement) => {
+    (node: ast.BlockStatement) => {
       return makeBlockIfNeeded(node.body)
     }
   ],
 
   [
     'ExpressionStatement',
-    (node: es.ExpressionStatement) => {
+    (node: ast.ExpressionStatement) => {
       return transform(node.expression)
     }
   ],
 
   [
     'IfStatement',
-    (node: es.IfStatement) => {
+    (node: ast.IfStatement) => {
       return vector_to_list([
         'conditional_statement',
         transform(node.test),
         transform(node.consequent),
-        transform(node.alternate as es.Statement)
+        transform(node.alternate as ast.Statement)
       ])
     }
   ],
 
   [
     'FunctionDeclaration',
-    (node: es.FunctionDeclaration) => {
+    (node: ast.FunctionDeclaration) => {
       return vector_to_list([
         'function_declaration',
-        transform(node.id as es.Identifier),
+        transform(node.id as ast.Identifier),
         vector_to_list(node.params.map(transform)),
         makeBlockIfNeeded(node.body.body)
       ])
@@ -98,18 +99,18 @@ const transformers: ASTTransformers = new Map([
 
   [
     'VariableDeclaration',
-    (node: es.VariableDeclaration) => {
+    (node: ast.VariableDeclaration) => {
       if (node.kind === 'let') {
         return vector_to_list([
           'variable_declaration',
           transform(node.declarations[0].id),
-          transform(node.declarations[0].init as es.Expression)
+          transform(node.declarations[0].init as ast.Expression)
         ])
       } else if (node.kind === 'const') {
         return vector_to_list([
           'constant_declaration',
           transform(node.declarations[0].id),
-          transform(node.declarations[0].init as es.Expression)
+          transform(node.declarations[0].init as ast.Expression)
         ])
       } else {
         unreachable()
@@ -120,14 +121,14 @@ const transformers: ASTTransformers = new Map([
 
   [
     'ReturnStatement',
-    (node: es.ReturnStatement) => {
-      return vector_to_list(['return_statement', transform(node.argument as es.Expression)])
+    (node: ast.ReturnStatement) => {
+      return vector_to_list(['return_statement', transform(node.returned as ast.Expression)])
     }
   ],
 
   [
     'CallExpression',
-    (node: es.CallExpression) => {
+    (node: ast.CallExpression) => {
       return vector_to_list([
         'application',
         transform(node.callee),
@@ -138,7 +139,7 @@ const transformers: ASTTransformers = new Map([
 
   [
     'UnaryExpression',
-    (node: es.UnaryExpression) => {
+    (node: ast.UnaryExpression) => {
       return vector_to_list([
         'unary_operator_combination',
         node.operator === '-' ? '-unary' : node.operator,
@@ -149,7 +150,7 @@ const transformers: ASTTransformers = new Map([
 
   [
     'BinaryExpression',
-    (node: es.BinaryExpression) => {
+    (node: ast.BinaryExpression) => {
       return vector_to_list([
         'binary_operator_combination',
         node.operator,
@@ -161,7 +162,7 @@ const transformers: ASTTransformers = new Map([
 
   [
     'LogicalExpression',
-    (node: es.LogicalExpression) => {
+    (node: ast.LogicalExpression) => {
       return vector_to_list([
         'logical_composition',
         node.operator,
@@ -173,26 +174,26 @@ const transformers: ASTTransformers = new Map([
 
   [
     'ConditionalExpression',
-    (node: es.ConditionalExpression) => {
+    (node: ast.ConditionalExpression) => {
       return vector_to_list([
         'conditional_expression',
-        transform(node.test),
-        transform(node.consequent),
-        transform(node.alternate)
+        transform(node.judge),
+        transform(node.judge_true),
+        transform(node.judge_false)
       ])
     }
   ],
 
   [
     'ArrowFunctionExpression',
-    (node: es.ArrowFunctionExpression) => {
+    (node: ast.ArrowFunctionExpression) => {
       return vector_to_list([
         'lambda_expression',
         vector_to_list(node.params.map(transform)),
         node.body.type === 'BlockStatement'
           ? // body.body: strip away one layer of block:
             // The body of a function is the statement
-            // inside the curly braces.
+            // inside the curly bracast.
             makeBlockIfNeeded(node.body.body)
           : vector_to_list(['return_statement', transform(node.body)])
       ])
@@ -201,38 +202,38 @@ const transformers: ASTTransformers = new Map([
 
   [
     'Identifier',
-    (node: es.Identifier) => {
+    (node: ast.Identifier) => {
       return vector_to_list(['name', node.name])
     }
   ],
 
   [
     'Literal',
-    (node: es.Literal) => {
+    (node: ast.Literal) => {
       return vector_to_list(['literal', node.value])
     }
   ],
 
   [
     'ArrayExpression',
-    (node: es.ArrayExpression) => {
+    (node: ast.ArrayExpression) => {
       return vector_to_list(['array_expression', vector_to_list(node.elements.map(transform))])
     }
   ],
 
   [
     'AssignmentExpression',
-    (node: es.AssignmentExpression) => {
-      if (node.left.type === 'Identifier') {
+    (node: ast.AssignmentExpression) => {
+      if (node.left.type === 'Name') {
         return vector_to_list([
           'assignment',
-          transform(node.left as es.Identifier),
+          transform(node.left as ast.Name),
           transform(node.right)
         ])
       } else if (node.left.type === 'MemberExpression') {
         return vector_to_list([
           'object_assignment',
-          transform(node.left as es.Expression),
+          transform(node.left as ast.Expression),
           transform(node.right)
         ])
       } else {
@@ -244,12 +245,12 @@ const transformers: ASTTransformers = new Map([
 
   [
     'ForStatement',
-    (node: es.ForStatement) => {
+    (node: ast.ForStatement) => {
       return vector_to_list([
         'for_loop',
-        transform(node.init as es.VariableDeclaration | es.Expression),
-        transform(node.test as es.Expression),
-        transform(node.update as es.Expression),
+        transform(node.init as ast.VariableDeclaration | ast.Expression),
+        transform(node.test as ast.Expression),
+        transform(node.update as ast.Expression),
         transform(node.body)
       ])
     }
@@ -257,35 +258,35 @@ const transformers: ASTTransformers = new Map([
 
   [
     'WhileStatement',
-    (node: es.WhileStatement) => {
+    (node: ast.WhileStatement) => {
       return vector_to_list(['while_loop', transform(node.test), transform(node.body)])
     }
   ],
 
   [
     'BreakStatement',
-    (node: es.BreakStatement) => {
+    (node: ast.BreakStatement) => {
       return vector_to_list(['break_statement'])
     }
   ],
 
   [
     'ContinueStatement',
-    (node: es.ContinueStatement) => {
+    (node: ast.ContinueStatement) => {
       return vector_to_list(['continue_statement'])
     }
   ],
 
   [
     'ObjectExpression',
-    (node: es.ObjectExpression) => {
+    (node: ast.ObjectExpression) => {
       return vector_to_list(['object_expression', vector_to_list(node.properties.map(transform))])
     }
   ],
 
   [
     'MemberExpression',
-    (node: es.MemberExpression) => {
+    (node: ast.MemberExpression) => {
       const key =
         node.property.type === 'Identifier'
           ? vector_to_list(['property', node.property.name])
@@ -296,7 +297,7 @@ const transformers: ASTTransformers = new Map([
 
   [
     'Property',
-    (node: es.Property) => {
+    (node: ast.Property) => {
       if (node.key.type === 'Literal') {
         return [node.key.value, transform(node.value)]
       } else if (node.key.type === 'Identifier') {
@@ -310,7 +311,7 @@ const transformers: ASTTransformers = new Map([
 
   [
     'ImportDeclaration',
-    (node: es.ImportDeclaration) => {
+    (node: ast.ImportDeclaration) => {
       return vector_to_list([
         'import_declaration',
         vector_to_list(node.specifiers.map(transform)),
@@ -321,14 +322,14 @@ const transformers: ASTTransformers = new Map([
 
   [
     'ImportSpecifier',
-    (node: es.ImportSpecifier) => {
+    (node: ast.ImportSpecifier) => {
       return vector_to_list(['name', node.imported.name])
     }
   ],
 
   [
     'ClassDeclaration',
-    (node: es.ClassDeclaration) => {
+    (node: ast.ClassDeclaration) => {
       return vector_to_list([
         'class_declaration',
         vector_to_list([
@@ -345,7 +346,7 @@ const transformers: ASTTransformers = new Map([
 
   [
     'NewExpression',
-    (node: es.NewExpression) => {
+    (node: ast.NewExpression) => {
       return vector_to_list([
         'new_expression',
         transform(node.callee),
@@ -356,7 +357,7 @@ const transformers: ASTTransformers = new Map([
 
   [
     'MethodDefinition',
-    (node: es.MethodDefinition) => {
+    (node: ast.MethodDefinition) => {
       return vector_to_list([
         'method_definition',
         node.kind,
@@ -368,7 +369,7 @@ const transformers: ASTTransformers = new Map([
 
   [
     'FunctionExpression',
-    (node: es.FunctionExpression) => {
+    (node: ast.FunctionExpression) => {
       return vector_to_list([
         'lambda_expression',
         vector_to_list(node.params.map(transform)),
@@ -379,42 +380,42 @@ const transformers: ASTTransformers = new Map([
 
   [
     'ThisExpression',
-    (node: es.ThisExpression) => {
+    (node: ast.ThisExpression) => {
       return vector_to_list(['this_expression'])
     }
   ],
 
   [
     'Super',
-    (node: es.Super) => {
+    (node: ast.Super) => {
       return vector_to_list(['super_expression'])
     }
   ],
 
   [
     'TryStatement',
-    (node: es.TryStatement) => {
+    (node: ast.TryStatement) => {
       return vector_to_list([
         'try_statement',
         transform(node.block),
         node.handler === null || node.handler === undefined
           ? null
-          : vector_to_list(['name', (node.handler.param as es.Identifier).name]),
+          : vector_to_list(['name', (node.handler.param as ast.Identifier).name]),
         node.handler === null || node.handler === undefined ? null : transform(node.handler.body)
       ])
     }
   ],
   [
     'ThrowStatement',
-    (node: es.ThrowStatement) => {
+    (node: ast.ThrowStatement) => {
       return vector_to_list(['throw_statement', transform(node.argument)])
     }
   ]
 ])
 
-function transform(node: es.Node) {
+function transform(node: ast.Node) {
   if (transformers.has(node.type)) {
-    const transformer = transformers.get(node.type) as (n: es.Node) => Value
+    const transformer = transformers.get(node.type) as (n: ast.Node) => Value
     const transformed = transformer(node)
     // Attach location information
     if (

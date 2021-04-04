@@ -1,4 +1,5 @@
-import * as es from 'estree'
+// import * as es from 'estree'
+import * as ast from '../parser/ast'
 import { ErrorSeverity, ErrorType, SourceError, Type, TypeAnnotatedNode } from '../types'
 import { simplify, stripIndent } from '../utils/formatters'
 import { typeToString } from '../utils/stringify'
@@ -10,7 +11,7 @@ export class CyclicReferenceError implements SourceError {
   public type = ErrorType.TYPE
   public severity = ErrorSeverity.WARNING
 
-  constructor(public node: TypeAnnotatedNode<es.Node>) {}
+  constructor(public node: TypeAnnotatedNode<ast.Node>) {}
 
   get location() {
     return this.node.loc!
@@ -25,11 +26,11 @@ export class CyclicReferenceError implements SourceError {
   }
 }
 
-function stringifyNode(node: TypeAnnotatedNode<es.Node>): string {
+function stringifyNode(node: TypeAnnotatedNode<ast.Node>): string {
   return ['VariableDeclaration', 'FunctionDeclaration'].includes(node.type)
     ? node.type === 'VariableDeclaration'
-      ? (node.declarations[0].id as es.Identifier).name
-      : (node as TypeAnnotatedNode<es.FunctionDeclaration>).id?.name!
+      ? (node.declarations[0].id as ast.Identifier).name
+      : (node as TypeAnnotatedNode<ast.FunctionDeclaration>).id?.name!
     : node.type === 'Identifier'
     ? node.name
     : JSON.stringify(node) // might not be a good idea
@@ -40,7 +41,7 @@ export class DifferentNumberArgumentsError implements SourceError {
   public severity = ErrorSeverity.WARNING
 
   constructor(
-    public node: TypeAnnotatedNode<es.Node>,
+    public node: TypeAnnotatedNode<ast.Node>,
     public numExpectedArgs: number,
     public numReceived: number
   ) {}
@@ -63,8 +64,8 @@ export class InvalidArgumentTypesError implements SourceError {
   public severity = ErrorSeverity.WARNING
 
   constructor(
-    public node: TypeAnnotatedNode<es.Node>,
-    public args: TypeAnnotatedNode<es.Node>[],
+    public node: TypeAnnotatedNode<ast.Node>,
+    public args: TypeAnnotatedNode<ast.Node>[],
     public expectedTypes: Type[],
     public receivedTypes: Type[]
   ) {}

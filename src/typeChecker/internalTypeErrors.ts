@@ -1,4 +1,5 @@
-import * as es from 'estree'
+// import * as es from 'estree'
+import * as ast from '../parser/ast'
 import { Type, TypeAnnotatedNode, SourceError, ErrorType, ErrorSeverity } from '../types'
 import { typeToString } from '../utils/stringify'
 
@@ -7,7 +8,7 @@ export class TypeError implements SourceError {
   public type = ErrorType.TYPE
   public severity = ErrorSeverity.WARNING
 
-  constructor(public node: TypeAnnotatedNode<es.Node>, public message: string) {
+  constructor(public node: TypeAnnotatedNode<ast.Node>, public message: string) {
     node.typability = 'Untypable'
   }
 

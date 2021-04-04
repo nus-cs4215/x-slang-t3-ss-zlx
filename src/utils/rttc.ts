@@ -1,4 +1,5 @@
-import * as es from 'estree'
+// import * as es from 'estree'
+import * as ast from '../parser/ast'
 import { RuntimeSourceError } from '../errors/runtimeSourceError'
 import { ErrorSeverity, ErrorType, Value } from '../types'
 
@@ -8,9 +9,9 @@ const RHS = ' on right hand side of operation'
 export class TypeError extends RuntimeSourceError {
   public type = ErrorType.RUNTIME
   public severity = ErrorSeverity.ERROR
-  public location: es.SourceLocation
+  public location: ast.SourceLocation
 
-  constructor(node: es.Node, public side: string, public expected: string, public got: string) {
+  constructor(node: ast.Node, public side: string, public expected: string, public got: string) {
     super(node)
   }
 
@@ -44,7 +45,7 @@ const isBool = (v: Value) => typeOf(v) === 'boolean'
 const isObject = (v: Value) => typeOf(v) === 'object'
 const isArray = (v: Value) => typeOf(v) === 'array'
 
-export const checkUnaryExpression = (node: es.Node, operator: es.UnaryOperator, value: Value) => {
+export const checkUnaryExpression = (node: ast.Node, operator: ast.UnaryOperator, value: Value) => {
   if ((operator === '+' || operator === '-') && !isNumber(value)) {
     return new TypeError(node, '', 'number', typeOf(value))
   } else if (operator === 'not' && !isBool(value)) {
@@ -55,8 +56,8 @@ export const checkUnaryExpression = (node: es.Node, operator: es.UnaryOperator, 
 }
 
 export const checkBinaryExpression = (
-  node: es.Node,
-  operator: es.BinaryOperator,
+  node: ast.Node,
+  operator: ast.BinaryOperator,
   left: Value,
   right: Value
 ) => {
@@ -97,19 +98,19 @@ export const checkBinaryExpression = (
 }
 
 export const checkConditionalExpression = (
-  node: es.Node,
+  node: ast.Node,
   judge: Value,
-  judgeTrue: Value,
-  judgeFalse: Value
+  judge_true: Value,
+  judge_false: Value
 ) => {
   return isBool(judge) ? undefined : new TypeError(node, ' as judge', 'boolean', typeOf(judge))
 }
 
-export const checkIfStatement = (node: es.Node, test: Value) => {
+export const checkIfStatement = (node: ast.Node, test: Value) => {
   return isBool(test) ? undefined : new TypeError(node, ' as condition', 'boolean', typeOf(test))
 }
 
-export const checkMemberAccess = (node: es.Node, obj: Value, prop: Value) => {
+export const checkMemberAccess = (node: ast.Node, obj: Value, prop: Value) => {
   if (isObject(obj)) {
     return isString(prop) ? undefined : new TypeError(node, ' as prop', 'string', typeOf(prop))
   } else if (isArray(obj)) {
@@ -123,6 +124,6 @@ export const checkMemberAccess = (node: es.Node, obj: Value, prop: Value) => {
   }
 }
 
-export const isIdentifier = (node: any): node is es.Identifier => {
-  return (node as es.Identifier).name !== undefined
+export const isIdentifier = (node: any): node is ast.Identifier => {
+  return (node as ast.Identifier).name !== undefined
 }

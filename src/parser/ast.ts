@@ -36,7 +36,9 @@ interface BaseNode extends BaseNodeWithoutComments {
 }
 
 export type Node =
+  | Name
   | Identifier
+  | Value
   | Literal
   | Program
   | Function
@@ -62,7 +64,7 @@ export interface Comment extends BaseNodeWithoutComments {
   value: string
 }
 
-interface SourceLocation {
+export interface SourceLocation {
   source?: string | null
   start: Position
   end: Position
@@ -101,6 +103,8 @@ interface BaseFunction extends BaseNode {
 export type Function = FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
 
 export type Statement =
+  | SimpleStatement
+  | CompoundStatement
   | ExpressionStatement
   | BlockStatement
   | EmptyStatement
@@ -131,6 +135,16 @@ export interface BlockStatement extends BaseStatement {
   type: 'BlockStatement'
   body: Array<Statement>
   innerComments?: Array<Comment>
+}
+
+export interface SimpleStatement extends BaseStatement {
+  type: 'SimpleStatement',
+  value: AssignmentExpression | BinaryExpression | UnaryExpression | ConditionalExpression
+}
+
+export interface CompoundStatement extends BaseStatement {
+  type: 'CompoundStatement',
+  value: ConditionalExpression
 }
 
 export interface ExpressionStatement extends BaseStatement {
@@ -175,7 +189,7 @@ export interface SwitchStatement extends BaseStatement {
 
 export interface ReturnStatement extends BaseStatement {
   type: 'ReturnStatement'
-  argument?: Expression | null
+  returned: Expression
 }
 
 export interface ThrowStatement extends BaseStatement {
@@ -247,13 +261,14 @@ export interface VariableDeclarator extends BaseNode {
   init?: Expression | null
 }
 
-type Expression =
+export type Expression =
   | ThisExpression
   | ArrayExpression
   | ObjectExpression
   | FunctionExpression
   | ArrowFunctionExpression
   | YieldExpression
+  | Value
   | Literal
   | UnaryExpression
   | UpdateExpression
@@ -269,6 +284,7 @@ type Expression =
   | TaggedTemplateExpression
   | ClassExpression
   | MetaProperty
+  | Name
   | Identifier
   | AwaitExpression
   | ImportExpression
@@ -333,9 +349,8 @@ export interface BinaryExpression extends BaseExpression {
 }
 
 export interface AssignmentExpression extends BaseExpression {
-  type: 'AssignmentExpression'
-  operator: AssignmentOperator
-  left: Pattern | MemberExpression
+  type: 'Assignment'
+  left: Name
   right: Expression
 }
 
@@ -355,9 +370,9 @@ export interface LogicalExpression extends BaseExpression {
 
 export interface ConditionalExpression extends BaseExpression {
   type: 'ConditionalExpression'
-  test: Expression
-  alternate: Expression
-  consequent: Expression
+  judge: Expression
+  judge_true: Expression
+  judge_false: Expression
 }
 
 interface BaseCallExpression extends BaseExpression {
@@ -384,6 +399,7 @@ export interface MemberExpression extends BaseExpression, BasePattern {
 }
 
 export type Pattern =
+  | Name
   | Identifier
   | ObjectPattern
   | ArrayPattern
@@ -405,9 +421,31 @@ export interface CatchClause extends BaseNode {
   body: BlockStatement
 }
 
+export interface Name extends BaseNode {
+  type: 'Name',
+  name: string
+}
+
 export interface Identifier extends BaseNode, BaseExpression, BasePattern {
   type: 'Identifier'
   name: string
+}
+
+export type Value = Number | Bool | String
+
+export interface Number extends BaseNode {
+  type: 'Number',
+  value: number
+}
+
+export interface Bool extends BaseNode {
+  type: 'Bool',
+  value: boolean
+}
+
+export interface String extends BaseNode {
+  type: 'String',
+  value: string
 }
 
 export type Literal = SimpleLiteral | RegExpLiteral
@@ -428,7 +466,7 @@ export interface RegExpLiteral extends BaseNode, BaseExpression {
   raw?: string
 }
 
-export type UnaryOperator = '-' | '+' | '!' | '~' | 'typeof' | 'void' | 'delete'
+export type UnaryOperator = '-' | '+' | '!' | 'not' | '~' | 'typeof' | 'void' | 'delete'
 
 export type BinaryOperator =
   | '=='
@@ -446,11 +484,14 @@ export type BinaryOperator =
   | '-'
   | '*'
   | '/'
+  | '//'
   | '%'
   | '**'
   | '|'
+  | 'or'
   | '^'
   | '&'
+  | 'and'
   | 'in'
   | 'instanceof'
 

@@ -6,7 +6,8 @@
 /* tslint:disable:max-classes-per-file */
 
 import { SourceLocation } from 'acorn'
-import * as es from 'estree'
+import * as ast from './parser/ast'
+// import * as es from 'estree'
 
 /**
  * Defines functions that act as built-ins, but might rely on
@@ -35,16 +36,16 @@ export enum ErrorSeverity {
 export interface SourceError {
   type: ErrorType
   severity: ErrorSeverity
-  location: es.SourceLocation
+  location: ast.SourceLocation
   explain(): string
   elaborate(): string
 }
 
-export interface Rule<T extends es.Node> {
+export interface Rule<T extends ast.Node> {
   name: string
   disableOn?: number
   checkers: {
-    [name: string]: (node: T, ancestors: es.Node[]) => SourceError[]
+    [name: string]: (node: T, ancestors: ast.Node[]) => SourceError[]
   }
 }
 
@@ -92,7 +93,7 @@ export interface Context<T = any> {
   runtime: {
     isRunning: boolean
     environments: Environment[]
-    nodes: es.Node[]
+    nodes: ast.Node[]
   }
 
   moduleParams?: any
@@ -125,18 +126,18 @@ export interface Context<T = any> {
 export interface BlockFrame {
   type: string
   // loc refers to the block defined by every pair of curly braces
-  loc?: es.SourceLocation | null
+  loc?: ast.SourceLocation | null
   // For certain type of BlockFrames, we also want to take into account
   // the code directly outside the curly braces as there
   // may be variables declared there as well, such as in function definitions or for loops
-  enclosingLoc?: es.SourceLocation | null
+  enclosingLoc?: ast.SourceLocation | null
   children: (DefinitionNode | BlockFrame)[]
 }
 
 export interface DefinitionNode {
   name: string
   type: string
-  loc?: es.SourceLocation | null
+  loc?: ast.SourceLocation | null
 }
 
 // tslint:disable:no-any
@@ -151,7 +152,7 @@ export type AllowedDeclarations = 'const' | 'let'
 export interface Environment {
   name: string
   tail: Environment | null
-  callExpression?: es.CallExpression
+  callExpression?: ast.CallExpression
   head: Frame
   thisContext?: Value
 }
@@ -193,18 +194,18 @@ export interface Scheduler {
 	Although the ESTree specifications supposedly provide a Directive interface, the index file does not seem to export it.
 	As such this interface was created here to fulfil the same purpose.
  */
-export interface Directive extends es.ExpressionStatement {
+export interface Directive extends ast.ExpressionStatement {
   type: 'ExpressionStatement'
-  expression: es.Literal
+  expression:ast.Literal
   directive: string
 }
 
 /** For use in the substituter, to differentiate between a function declaration in the expression position,
  * which has an id, as opposed to function expressions.
  */
-export interface FunctionDeclarationExpression extends es.FunctionExpression {
-  id: es.Identifier
-  body: es.BlockStatement
+export interface FunctionDeclarationExpression extends ast.FunctionExpression {
+  id: ast.Identifier
+  body: ast.BlockStatement
 }
 
 /**
@@ -212,16 +213,16 @@ export interface FunctionDeclarationExpression extends es.FunctionExpression {
  * only contains a single return statement; or a block, but has to be in the expression position.
  * This is NOT compliant with the ES specifications, just as an intermediate step during substitutions.
  */
-export interface BlockExpression extends es.BaseExpression {
+export interface BlockExpression extends ast.BaseExpression {
   type: 'BlockExpression'
-  body: es.Statement[]
+  body: ast.Statement[]
 }
 
-export type substituterNodes = es.Node | BlockExpression
+export type substituterNodes = ast.Node | BlockExpression
 
-export type TypeAnnotatedNode<T extends es.Node> = TypeAnnotation & T
+export type TypeAnnotatedNode<T extends ast.Node> = TypeAnnotation & T
 
-export type TypeAnnotatedFuncDecl = TypeAnnotatedNode<es.FunctionDeclaration> & TypedFuncDecl
+export type TypeAnnotatedFuncDecl = TypeAnnotatedNode<ast.FunctionDeclaration> & TypedFuncDecl
 
 export type TypeAnnotation = Untypable | Typed | NotYetTyped
 

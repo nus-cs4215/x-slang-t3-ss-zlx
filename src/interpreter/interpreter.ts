@@ -1,10 +1,12 @@
 /* tslint:disable:max-classes-per-file */
-import * as es from 'estree'
+import * as ast from '../parser/ast'
+// import * as es from 'estree'
 import * as constants from '../constants'
 import * as errors from '../errors/errors'
 import { RuntimeSourceError } from '../errors/runtimeSourceError'
 import { Context, Environment, Frame, Value } from '../types'
-import { constantDeclaration, primitive } from '../utils/astCreator'
+// import { constantDeclaration} from '../utils/astCreator'
+import { primitive } from '../utils/astCreator'
 import {
   evaluateBinaryExpression,
   evaluateConditionalExpression,
@@ -22,13 +24,13 @@ class ReturnValue {
 }
 
 class TailCallReturnValue {
-  constructor(public callee: Closure, public args: Value[], public node: es.CallExpression) {}
+  constructor(public callee: Closure, public args: Value[], public node: ast.CallExpression) {}
 }
 
 class Thunk {
   public value: Value
   public isMemoized: boolean
-  constructor(public exp: es.Node, public env: Environment) {
+  constructor(public exp: ast.Node, public env: Environment) {
     this.isMemoized = false
     this.value = null
   }
@@ -47,7 +49,7 @@ function* forceIt(val: any, context: Context): Value {
   } else return val
 }
 
-export function* actualValue(exp: es.Node, context: Context): Value {
+export function* actualValue(exp: ast.Node, context: Context): Value {
   const evalResult = yield* evaluate(exp, context)
   const forced = yield* forceIt(evalResult, context)
   return forced
@@ -56,7 +58,7 @@ export function* actualValue(exp: es.Node, context: Context): Value {
 const createEnvironment = (
   closure: Closure,
   args: Value[],
-  callExpression?: es.CallExpression
+  callExpression?: ast.CallExpression
 ): Environment => {
   const environment: Environment = {
     name: closure.functionName, // TODO: Change this
@@ -70,7 +72,7 @@ const createEnvironment = (
     }
   }
   closure.node.params.forEach((param, index) => {
-    const ident = param as es.Identifier
+    const ident = param as ast.Identifier
     environment.head[ident.name] = args[index]
   })
   return environment
@@ -96,9 +98,15 @@ const handleRuntimeError = (context: Context, error: RuntimeSourceError): never 
   throw error
 }
 
+function assignName(context: Context, name: string, value: Value) {
+  const environment = currentEnvironment(context)
+  environment.head[name] = value
+  return environment
+}
+
 const DECLARED_BUT_NOT_YET_ASSIGNED = Symbol('Used to implement hoisting')
 
-function declareIdentifier(context: Context, name: string, node: es.Node) {
+function declareIdentifier(context: Context, name: string, node: ast.Node) {
   const environment = currentEnvironment(context)
   if (environment.head.hasOwnProperty(name)) {
     const descriptors = Object.getOwnPropertyDescriptors(environment.head)
@@ -112,26 +120,26 @@ function declareIdentifier(context: Context, name: string, node: es.Node) {
   return environment
 }
 
-function declareVariables(context: Context, node: es.VariableDeclaration) {
+function declareVariables(context: Context, node: ast.VariableDeclaration) {
   for (const declaration of node.declarations) {
-    declareIdentifier(context, (declaration.id as es.Identifier).name, node)
+    declareIdentifier(context, (declaration.id as ast.Identifier).name, node)
   }
 }
 
-function declareFunctionsAndVariables(context: Context, node: es.BlockStatement) {
+function declareFunctionsAndVariables(context: Context, node: ast.BlockStatement) {
   for (const statement of node.body) {
     switch (statement.type) {
       case 'VariableDeclaration':
         declareVariables(context, statement)
         break
       case 'FunctionDeclaration':
-        declareIdentifier(context, (statement.id as es.Identifier).name, statement)
+        declareIdentifier(context, (statement.id as ast.Identifier).name, statement)
         break
     }
   }
 }
 
-function* visit(context: Context, node: es.Node) {
+function* visit(context: Context, node: ast.Node) {
   context.runtime.nodes.unshift(node)
   yield context
 }
@@ -152,7 +160,7 @@ const checkNumberOfArguments = (
   context: Context,
   callee: Closure | Value,
   args: Value[],
-  exp: es.CallExpression
+  exp: ast.CallExpression
 ) => {
   if (callee instanceof Closure) {
     if (callee.node.params.length !== args.length) {
@@ -172,9 +180,9 @@ const checkNumberOfArguments = (
   return undefined
 }
 
-export type Evaluator<T extends es.Node> = (node: T, context: Context) => IterableIterator<Value>
+export type Evaluator<T extends ast.Node> = (node: T, context: Context) => IterableIterator<Value>
 
-function* evaluateBlockSatement(context: Context, node: es.BlockStatement) {
+function* evaluateBlockSatement(context: Context, node: ast.BlockStatement) {
   declareFunctionsAndVariables(context, node)
   let result
   for (const statement of node.body) {
@@ -203,17 +211,17 @@ function* evaluateBlockSatement(context: Context, node: es.BlockStatement) {
  */
 // tslint:disable:object-literal-shorthand
 // prettier-ignore
-export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
+export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     /** Simple Values */
-    Number: function* (node: es.Number, context: Context) {
+    Number: function* (node: ast.Number, context: Context) {
       return node.value
     },
 
-    Bool: function* (node: es.Bool, context: Context) {
+    Bool: function* (node: ast.Bool, context: Context) {
       return node.value
     },
 
-    String: function* (node: es.String, context: Context) {
+    String: function* (node: ast.String, context: Context) {
       return node.value
     },
 
@@ -226,7 +234,7 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     //     return node.quasis[0].value.cooked
     // },
 
-    ArrayExpression: function*(node: es.ArrayExpression, context: Context) {
+    ArrayExpression: function*(node: ast.ArrayExpression, context: Context) {
         throw new Error("Array expressions not supported in x-slang");
     },
 
@@ -235,11 +243,12 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     //     yield
     // },
 
-    Name: function*(node: es.Name, context: Context) {
-        return node.value
+    Name: function*(node: ast.Name, context: Context) {
+        const environment = currentEnvironment(context)
+        return environment.head[node.name]
     },
 
-    UnaryExpression: function*(node: es.UnaryExpression, context: Context) {
+    UnaryExpression: function*(node: ast.UnaryExpression, context: Context) {
         const value = yield* actualValue(node.argument, context)
 
         const error = rttc.checkUnaryExpression(node, node.operator, value)
@@ -249,7 +258,7 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
         return evaluateUnaryExpression(node.operator, value)
     },
 
-    BinaryExpression: function*(node: es.BinaryExpression, context: Context) {
+    BinaryExpression: function*(node: ast.BinaryExpression, context: Context) {
         const left = yield* actualValue(node.left, context)
         const right = yield* actualValue(node.right, context)
         const error = rttc.checkBinaryExpression(node, node.operator, left, right)
@@ -259,10 +268,10 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
         return evaluateBinaryExpression(node.operator, left, right)
     },
 
-    ConditionalExpression: function*(node: es.ConditionalExpression, context: Context) {
+    ConditionalExpression: function*(node: ast.ConditionalExpression, context: Context) {
         const judge = yield* actualValue(node.judge, context)
-        const judgeTrue = yield* actualValue(node.judgeTrue, context)
-        const judgeFalse = yield* actualValue(node.judgeFalse, context)
+        const judgeTrue = yield* actualValue(node.judge_true, context)
+        const judgeFalse = yield* actualValue(node.judge_false, context)
         const error = rttc.checkConditionalExpression(node, judge, judgeTrue, judgeFalse)
         if (error) {
             return handleRuntimeError(context, error)
@@ -270,45 +279,21 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
         return evaluateConditionalExpression(judge, judgeTrue, judgeFalse)
     },
 
-    AssignmentExpression: function*(node: es.AssignmentExpression, context: Context) {
+    AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
       const value = yield* actualValue(node.right, context)
-      const symbol = node.left.value
-      // Assign Symbol Value HERE
-      context.numberOfOuterEnvironments += 1
-      const environment = createBlockEnvironment(context, 'programEnvironment')
-      pushEnvironment(context, environment)
+      const symbol = node.left.name
+      assignName(context, symbol, value)
       return value
-
-      /*
-      function assign_symbol_value(symbol, val, env) {
-        function env_loop(env) {
-          function scan(symbols, vals) {
-            return is_null(symbols)
-              ? env_loop(enclosing_environment(env))
-              : symbol === head(symbols)
-              ? set_head(vals, val)
-              : scan(tail(symbols), tail(vals));
-          }
-          if (env === the_empty_environment) {
-            error(symbol, "unbound name -- assignment");
-          } else {
-            const frame = first_frame(env);
-            return scan(frame_symbols(frame), frame_values(frame));
-          }
-        }
-        return env_loop(env);
-      }
-      */
     },
 
-    WhileStatement: function*(node: es.WhileStatement, context: Context) {
-      // throw new Error("While statements not supported in x-slang");
-      const condition = yield* actualValue(node.condition.value.element, context)
+    WhileStatement: function*(node: ast.WhileStatement, context: Context) {
+      throw new Error("While statements not supported in x-slang");
+      // const condition = yield* actualValue(node.condition.value.element, context)
       // Need to recursively check whether condition is satisfied HERE
-      return condition ? evaluate(node.body, context) : null;
+      // return condition ? evaluate(node.body, context) : null;
     },
 
-    ForStatement: function*(node: es.ForStatement, context: Context) {
+    ForStatement: function*(node: ast.ForStatement, context: Context) {
       // Create a new block scope for the loop variables
       throw new Error("For statements not supported in x-slang");
     },
@@ -323,18 +308,18 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     //     throw new Error("Break statements not supported in x-slang");
     // },
 
-    FunctionDeclaration: function*(node: es.FunctionDeclaration, context: Context) {
+    FunctionDeclaration: function*(node: ast.FunctionDeclaration, context: Context) {
       throw new Error("Function declarations not supported in x-slang");
 
       // return yield* evaluate(funcDeclToConstDecl, context)
     },
 
     // HERE
-    CallExpression: function*(node: es.CallExpression, context: Context) {
+    CallExpression: function*(node: ast.CallExpression, context: Context) {
       throw new Error("Call expressions not supported in x-slang");
     },
 
-    BlockStatement: function*(node: es.BlockStatement, context: Context) {
+    BlockStatement: function*(node: ast.BlockStatement, context: Context) {
       throw new Error("Block statements not supported in x-slang");
     },
 
@@ -349,11 +334,11 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     //     throw new Error("Arrow functions expressions not supported in x-slang");
     // },
 
-    ExpressionStatement: function*(node: es.ExpressionStatement, context: Context) {
+    ExpressionStatement: function*(node: ast.ExpressionStatement, context: Context) {
         return yield* evaluate(node.expression, context)
     },
 
-    ReturnStatement: function*(node: es.ReturnStatement, context: Context) {
+    ReturnStatement: function*(node: ast.ReturnStatement, context: Context) {
         const returned = yield* actualValue(node.returned, context)
         return returned
     },
@@ -380,7 +365,7 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
     //     throw new Error("Import declarations not supported in x-slang");
     // },
 
-    Program: function*(node: es.BlockStatement, context: Context) {
+    Program: function*(node: ast.BlockStatement, context: Context) {
         context.numberOfOuterEnvironments += 1
         const environment = createBlockEnvironment(context, 'programEnvironment')
         pushEnvironment(context, environment)
@@ -390,7 +375,7 @@ export const evaluators: { [nodeType: string]: Evaluator<es.Node> } = {
 }
 // tslint:enable:object-literal-shorthand
 
-export function* evaluate(node: es.Node, context: Context) {
+export function* evaluate(node: ast.Node, context: Context) {
   yield* visit(context, node)
   const result = yield* evaluators[node.type](node, context)
   yield* leave(context)
@@ -401,7 +386,7 @@ export function* apply(
   context: Context,
   fun: Closure | Value,
   args: (Thunk | Value)[],
-  node: es.CallExpression,
+  node: ast.CallExpression,
   thisContext?: Value
 ) {
   let result: Value
@@ -420,7 +405,7 @@ export function* apply(
       const bodyEnvironment = createBlockEnvironment(context, 'functionBodyEnvironment')
       bodyEnvironment.thisContext = thisContext
       pushEnvironment(context, bodyEnvironment)
-      result = yield* evaluateBlockSatement(context, fun.node.body as es.BlockStatement)
+      result = yield* evaluateBlockSatement(context, fun.node.body as ast.BlockStatement)
       popEnvironment(context)
       if (result instanceof TailCallReturnValue) {
         fun = result.callee

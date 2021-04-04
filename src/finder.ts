@@ -8,7 +8,7 @@ import {
   Node,
   SourceLocation,
   VariableDeclarator
-} from 'estree'
+} from './parser/ast'
 import { Context } from './types'
 
 // Finds the innermost node that matches the given location

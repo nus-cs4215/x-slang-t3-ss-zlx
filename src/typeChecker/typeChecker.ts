@@ -1,4 +1,5 @@
-import * as es from 'estree'
+// import * as es from 'estree'
+import * as ast from '../parser/ast'
 import {
   Context,
   TypeAnnotatedNode,
@@ -33,7 +34,7 @@ let typeIdCounter = 0
  * @param constraints: undefined for first call
  */
 /* tslint:disable cyclomatic-complexity */
-function traverse(node: TypeAnnotatedNode<es.Node>, constraints?: Constraint[]) {
+function traverse(node: TypeAnnotatedNode<ast.Node>, constraints?: Constraint[]) {
   if (node === null) {
     // this happens in a holey array [,,,,,]
     return
@@ -91,7 +92,7 @@ function traverse(node: TypeAnnotatedNode<es.Node>, constraints?: Constraint[]) 
       throw Error('Arrow functions not supported for x-slang')
     case 'FunctionDeclaration':
       throw Error('Function declarations  not supported for x-slang')
-    case 'AssignmentExpression':
+    case 'Assignment':
       throw Error('Assignments expressions not supported for x-slang')
     case 'ArrayExpression':
       throw Error('Array expressions not supported for x-slang')
@@ -133,9 +134,9 @@ let typeErrors: SourceError[] = []
  * @param program Parsed Program
  */
 export function typeCheck(
-  program: TypeAnnotatedNode<es.Program>,
+  program: TypeAnnotatedNode<ast.Program>,
   context: Context
-): [TypeAnnotatedNode<es.Program>, SourceError[]] {
+): [TypeAnnotatedNode<ast.Program>, SourceError[]] {
   typeIdCounter = 0
   typeErrors = []
   const env: Env = context.typeEnvironment
@@ -431,7 +432,7 @@ function addToConstraintList(constraints: Constraint[], [LHS, RHS]: [Type, Type]
   throw new UnifyError(LHS, RHS)
 }
 
-function statementHasReturn(node: es.Node): boolean {
+function statementHasReturn(node: ast.Node): boolean {
   switch (node.type) {
     case 'IfStatement': {
       return statementHasReturn(node.consequent) || statementHasReturn(node.alternate!)
@@ -453,7 +454,7 @@ function statementHasReturn(node: es.Node): boolean {
 }
 
 // These are the only two possible kinds of value returning statements when excluding return statements
-function stmtHasValueReturningStmt(node: es.Node): boolean {
+function stmtHasValueReturningStmt(node: ast.Node): boolean {
   switch (node.type) {
     case 'ExpressionStatement': {
       return true
@@ -483,7 +484,7 @@ function stmtHasValueReturningStmt(node: es.Node): boolean {
  * either the first return statement or the last statement in the block otherwise
  */
 function returnBlockValueNodeIndexFor(
-  node: es.Program | es.BlockStatement,
+  node: ast.Program | ast.BlockStatement,
   isTopLevelAndLastValStmt: boolean
 ): number {
   const lastStatementIndex = node.body.length - 1
@@ -518,7 +519,7 @@ function pushEnv(env: Env) {
 
 /* tslint:disable cyclomatic-complexity */
 function infer(
-  node: TypeAnnotatedNode<es.Node>,
+  node: TypeAnnotatedNode<ast.Node>,
   env: Env,
   constraints: Constraint[],
   isTopLevelAndLastValStmt: boolean = false
@@ -536,7 +537,7 @@ function infer(
 
 /* tslint:disable cyclomatic-complexity */
 function _infer(
-  node: TypeAnnotatedNode<es.Node>,
+  node: TypeAnnotatedNode<ast.Node>,
   env: Env,
   constraints: Constraint[],
   isTopLevelAndLastValStmt: boolean = false
@@ -546,7 +547,7 @@ function _infer(
     case 'UnaryExpression': {
       const op = node.operator === '-' ? NEGATIVE_OP : node.operator
       const funcType = lookupType(op, env) as FunctionType // in either case its a monomorphic type
-      const argNode = node.argument as TypeAnnotatedNode<es.Node>
+      const argNode = node.argument as TypeAnnotatedNode<ast.Node>
       const argType = argNode.inferredType as Variable
       const receivedTypes: Type[] = []
       let newConstraints = infer(argNode, env, constraints)
@@ -568,9 +569,9 @@ function _infer(
     case 'BinaryExpression': {
       const envType = lookupType(node.operator, env)!
       const opType = envType.kind === 'forall' ? extractFreeVariablesAndGenFresh(envType) : envType
-      const leftNode = node.left as TypeAnnotatedNode<es.Node>
+      const leftNode = node.left as TypeAnnotatedNode<ast.Node>
       const leftType = leftNode.inferredType as Variable
-      const rightNode = node.right as TypeAnnotatedNode<es.Node>
+      const rightNode = node.right as TypeAnnotatedNode<ast.Node>
       const rightType = rightNode.inferredType as Variable
 
       const argNodes = [leftNode, rightNode]
@@ -611,9 +612,9 @@ function _infer(
       const lastStatementIndex = node.body.length - 1
       const returnValNodeIndex = returnBlockValueNodeIndexFor(node, isTopLevelAndLastValStmt)
       const lastDeclNodeIndex = -1
-      const lastNode = node.body[returnValNodeIndex] as TypeAnnotatedNode<es.Node>
+      const lastNode = node.body[returnValNodeIndex] as TypeAnnotatedNode<ast.Node>
       const lastNodeType = (isTopLevelAndLastValStmt && lastNode.type === 'ExpressionStatement'
-        ? (lastNode.expression as TypeAnnotatedNode<es.Node>).inferredType
+        ? (lastNode.expression as TypeAnnotatedNode<ast.Node>).inferredType
         : lastNode.inferredType) as Variable
       let newConstraints = addToConstraintList(constraints, [storedType, lastNodeType])
       for (let i = 0; i <= lastDeclNodeIndex; i++) {
@@ -662,7 +663,7 @@ function _infer(
       throw Error('Function declarations not supported for x-slang')
     case 'CallExpression':
       throw Error('Call expressions not supported for x-slang')
-    case 'AssignmentExpression':
+    case 'Assignment':
       throw Error('Assignment expressions not supported for x-slang')
     case 'ArrayExpression':
       throw Error('Array expressions not supported for x-slang')

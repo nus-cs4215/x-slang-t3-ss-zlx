@@ -1,6 +1,7 @@
 /* tslint:disable:max-classes-per-file */
 import { generate } from 'astring'
-import * as es from 'estree'
+import * as ast from '../parser/ast'
+// import * as es from 'estree'
 
 import { Context, Environment, Value } from '../types'
 import {
@@ -50,18 +51,18 @@ class Callable extends Function {
  */
 export default class Closure extends Callable {
   public static makeFromArrowFunction(
-    node: es.ArrowFunctionExpression,
+    node: ast.ArrowFunctionExpression,
     environment: Environment,
     context: Context
   ) {
-    function isExpressionBody(body: es.BlockStatement | es.Expression): body is es.Expression {
+    function isExpressionBody(body: ast.BlockStatement | ast.Expression): body is ast.Expression {
       return body.type !== 'BlockStatement'
     }
     const functionBody = isExpressionBody(node.body)
       ? [returnStatement(node.body, node.body.loc!)]
       : node.body
     const closure = new Closure(
-      blockArrowFunction(node.params as es.Identifier[], functionBody, node.loc!),
+      blockArrowFunction(node.params as ast.Identifier[], functionBody, node.loc!),
       environment,
       context
     )
@@ -80,9 +81,9 @@ export default class Closure extends Callable {
   public fun: Function
 
   /** The original node that created this Closure */
-  public originalNode: es.Function
+  public originalNode: ast.Function
 
-  constructor(public node: es.Function, public environment: Environment, context: Context) {
+  constructor(public node: ast.Function, public environment: Environment, context: Context) {
     super(function (this: any, ...args: any[]) {
       return funJS.apply(this, args)
     })
@@ -92,7 +93,7 @@ export default class Closure extends Callable {
     } else {
       this.functionName =
         (this.node.params.length === 1 ? '' : '(') +
-        this.node.params.map((o: es.Identifier) => o.name).join(', ') +
+        this.node.params.map((o: ast.Identifier) => o.name).join(', ') +
         (this.node.params.length === 1 ? '' : ')') +
         ' => ...'
     }

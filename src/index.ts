@@ -1,5 +1,5 @@
 import { findNodeAt } from './utils/walkers'
-import { Program, SourceLocation } from 'estree'
+import { Program, SourceLocation } from './parser/ast'
 import { SourceMapConsumer } from 'source-map'
 import createContext from './createContext'
 import { findDeclarationNode, findIdentifierNode } from './finder'
@@ -21,7 +21,8 @@ import {
 export { Variant } from './types'
 import { validateAndAnnotate } from './validator/validator'
 export { SourceDocumentation } from './editors/ace/docTooltip'
-import * as es from 'estree'
+import * as ast from './parser/ast'
+// import * as es from 'estree'
 import { typeCheck } from './typeChecker/typeChecker'
 import { typeToString } from './utils/stringify'
 import { PreemptiveScheduler } from './schedulers'
@@ -158,13 +159,13 @@ export function getTypeInformation(
     }
 
     // get name of the node
-    const getName = (typedNode: TypeAnnotatedNode<es.Node>) => {
+    const getName = (typedNode: TypeAnnotatedNode<ast.Node>) => {
       let nodeId = ''
       if (typedNode.type) {
         if (typedNode.type === 'FunctionDeclaration') {
           nodeId = typedNode.id?.name!
         } else if (typedNode.type === 'VariableDeclaration') {
-          nodeId = (typedNode.declarations[0].id as es.Identifier).name
+          nodeId = (typedNode.declarations[0].id as ast.Identifier).name
         } else if (typedNode.type === 'Identifier') {
           nodeId = typedNode.name
         }
@@ -173,7 +174,7 @@ export function getTypeInformation(
     }
 
     // callback function for findNodeAt function
-    function findByLocationPredicate(t: string, nd: TypeAnnotatedNode<es.Node>) {
+    function findByLocationPredicate(t: string, nd: TypeAnnotatedNode<ast.Node>) {
       if (!nd.inferredType) {
         return false
       }
@@ -202,7 +203,7 @@ export function getTypeInformation(
       return ans
     }
 
-    const node: TypeAnnotatedNode<es.Node> = res.node
+    const node: TypeAnnotatedNode<ast.Node> = res.node
 
     if (node === undefined) {
       return ans
@@ -210,7 +211,7 @@ export function getTypeInformation(
 
     const actualNode =
       node.type === 'VariableDeclaration'
-        ? (node.declarations[0].init! as TypeAnnotatedNode<es.Node>)
+        ? (node.declarations[0].init! as TypeAnnotatedNode<ast.Node>)
         : node
     const type = typeToString(
       actualNode.type === 'FunctionDeclaration'
