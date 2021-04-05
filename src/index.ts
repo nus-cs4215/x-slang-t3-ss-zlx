@@ -237,7 +237,7 @@ export async function runInContext(
   if (!program) {
     return resolvedErrorPromise
   }
-  validateAndAnnotate(program as Program, context)
+  //validateAndAnnotate(program as Program, context)
   typeCheck(program, context)
   if (context.errors.length > 0) {
     return resolvedErrorPromise
@@ -249,7 +249,7 @@ export async function runInContext(
     await runInContext(prelude, context, { ...options, isPrelude: true })
     return runInContext(code, context, options)
   }
-
+  console.log(JSON.stringify(program))
   const it = evaluate(program, context)
   const scheduler: Scheduler = new PreemptiveScheduler(theOptions.steps)
   return scheduler.run(it, context)

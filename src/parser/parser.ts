@@ -628,7 +628,7 @@ class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
     }
   }
 
-  // Visit a parse tree produced by Python3Parser#import_as_names.
+  // Visit a parse tree produced by Python3Parser#import_as_namast.
   visitImport_as_names(ctx: Import_as_namesContext): ast.Expression {
     console.log('visitImport_as_names')
     const returnlist = []
@@ -638,7 +638,7 @@ class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
     return returnlist
   }
 
-  // Visit a parse tree produced by Python3Parser#dotted_as_names.
+  // Visit a parse tree produced by Python3Parser#dotted_as_namast.
   visitDotted_as_names(ctx: Dotted_as_namesContext): ast.Expression {
     console.log('visitDotted_as_names')
     const returnlist = []
@@ -1735,7 +1735,26 @@ class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
   }
 }
 
+function convertExpression(expression: File_inputContext): ast.Expression {
+  const generator = new PythonExpressionGenerator()
+  return generator.visit(expression)
+}
+
+function convertSource(expression: File_inputContext): ast.Program {
+  return {
+    type: 'Program',
+    sourceType: 'script',
+    body: [
+      {
+        type: 'ExpressionStatement',
+        expression: convertExpression(expression)
+      }
+    ]
+  }
+}
+
 export function parse(source: string, context: Context) {
+  let program: ast.Program | undefined
   source = readFileSync('src/parser/input.py', 'utf-8')
   if (context.variant === 'python') {
     const inputStream = new ANTLRInputStream(source)
@@ -1744,12 +1763,13 @@ export function parse(source: string, context: Context) {
     const parser = new Python3Parser(tokenStream)
     parser.buildParseTree = true
     const tree = parser.file_input()
-    const visitor = new PythonExpressionGenerator()
+    program = convertSource(tree)
+    /*const visitor = new PythonExpressionGenerator()
     console.log('Visitor')
     const result = visitor.visit(tree)
     console.log('Final Result')
-    console.log(JSON.stringify(result))
-    return result
+    console.log(JSON.stringify(result))*/
+    return program
   } else {
     return undefined
   }
