@@ -1,11 +1,11 @@
 /* tslint:disable:max-classes-per-file */
-// @ts-nocheck
-import * as es from 'estree'
+// import * as es from 'estree'
 import * as ast from './ast'
 import { Context, ErrorSeverity, ErrorType, SourceError } from '../types'
 import { stripIndent } from '../utils/formatters'
-import { ANTLRInputStream, CommonTokenStream } from 'antlr4ts'
-import { CalcLexer } from '../lang/CalcLexer'
+import { ANTLRInputStream, CommonTokenStream, ParserRuleContext } from 'antlr4ts'
+// import { CalcLexer } from '../lang/CalcLexer'
+// import { ExpressionContext } from '../lang/Python3Lexer'
 import { Python3Parser } from '../lang/Python3Parser'
 import { Python3Lexer } from '../lang/Python3Lexer'
 import { Python3Visitor } from '../lang/Python3Visitor'
@@ -94,23 +94,25 @@ import { StrContext } from '../lang/Python3Parser'
 import { NumberContext } from '../lang/Python3Parser'
 import { IntegerContext } from '../lang/Python3Parser'
 import { readFileSync } from 'fs'
-import {
-  AdditionContext,
-  CalcParser,
-  DivisionContext,
-  ExpressionContext,
-  MultiplicationContext,
-  NumberContext,
-  ParenthesesContext,
-  PowerContext,
-  StartContext,
-  SubtractionContext
-} from '../lang/CalcParser'
-import { CalcVisitor } from '../lang/CalcVisitor'
-import { ErrorNode } from 'antlr4ts/tree/ErrorNode'
 import { ParseTree } from 'antlr4ts/tree/ParseTree'
 import { RuleNode } from 'antlr4ts/tree/RuleNode'
-import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
+// import {
+//   AdditionContext,
+//   CalcParser,
+//   DivisionContext,
+//   ExpressionContext,
+//   MultiplicationContext,
+//   NumberContext,
+//   ParenthesesContext,
+//   PowerContext,
+//   StartContext,
+//   SubtractionContext
+// } from '../lang/CalcParser'
+// import { CalcVisitor } from '../lang/CalcVisitor'
+// import { ErrorNode } from 'antlr4ts/tree/ErrorNode'
+// import { ParseTree } from 'antlr4ts/tree/ParseTree'
+// import { RuleNode } from 'antlr4ts/tree/RuleNode'
+// import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 
 export class DisallowedConstructError implements SourceError {
   public type = ErrorType.SYNTAX
@@ -197,20 +199,21 @@ export class TrailingCommaError implements SourceError {
   }
 }
 
-function contextToLocation(ctx: ExpressionContext): ast.SourceLocation {
-  return {
-    start: {
-      line: ctx.start.line,
-      column: ctx.start.charPositionInLine
-    },
-    end: {
-      line: ctx.stop ? ctx.stop.line : ctx.start.line,
-      column: ctx.stop ? ctx.stop.charPositionInLine : ctx.start.charPositionInLine
+class PythonProgramGenerator implements Python3Visitor<ast.Program> {
+  visitFile_input(ctx: File_inputContext): ast.Program {
+    console.log('visitFile_input')
+    const stmt_list = []
+    for (let i = 0; i < ctx.stmt().length; i++) {
+      stmt_list.push(PythonStatementGenerator.visit(ctx.stmt(i)))
     }
+    return { type: 'FileInput', value: stmt_list }
   }
 }
-class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
-  visitSingle_input(ctx: Single_inputContext): ast.Expression {
+
+class Python3ProgramVisitor extends ParsetreeVisitor<ast.Program> implements Python3Visitor<ast.Program> {
+}
+class PythonStatementGenerator implements Python3Visitor<ast.Statement> {
+  visitSingle_input(ctx: Single_inputContext): ast.Statement {
     console.log('visitSingle_input')
     if (ctx.simple_stmt() !== undefined) {
       return {
@@ -224,18 +227,24 @@ class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
       }
     }
   }
-  visitFile_input(ctx: File_inputContext): ast.Expression {
-    console.log('visitFile_input')
-    const stmt_list = []
-    for (let i = 0; i < ctx.stmt().length; i++) {
-      stmt_list.push(this.visit(ctx.stmt(i)))
-    }
-    return { type: 'FileInput', value: stmt_list }
-  }
+
   visitEval_input(ctx: Eval_inputContext): ast.Expression {
     console.log('visitEval_input')
     return { type: 'EvalInput', value: this.visit(ctx.testlist()) }
   }
+
+  visitStatement(tree: ParserRuleContext): ast.Statement {
+    return tree.accept(this)
+  }
+
+  visit(tree: ParserRuleContext): ast.Statement {
+    return tree.accept(this)
+  }
+}
+
+class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
+  
+  
 
   // Visit a parse tree produced by Python3Parser#decorator.
   visitDecorator(ctx: DecoratorContext): ast.Expression {
@@ -1735,6 +1744,20 @@ class PythonExpressionGenerator implements Python3Visitor<ast.Expression> {
   }
 }
 
+function convertSimpleStatementContext(simplStmt:)
+
+function convertStatementContext(stmt: StmtContext) : ast.Statement {
+  let simpleStmt = stmt.simple_stmt() 
+  if (simple_stmt !== undefined){
+    return convertStatementContext
+  }
+}
+
+function convertFileInputContext(ls: File_inputContext): ast.Statement[] {
+  let statements = ls.stmt()
+  return statements.map(convertStatementContext)
+}
+
 function convertExpression(expression: File_inputContext): ast.Expression {
   const generator = new PythonExpressionGenerator()
   return generator.visit(expression)
@@ -1744,12 +1767,7 @@ function convertSource(expression: File_inputContext): ast.Program {
   return {
     type: 'Program',
     sourceType: 'script',
-    body: [
-      {
-        type: 'ExpressionStatement',
-        expression: convertExpression(expression)
-      }
-    ]
+    body: convertFileInputContext(expression)
   }
 }
 

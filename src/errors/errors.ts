@@ -24,7 +24,7 @@ export class ModuleNotFound extends RuntimeSourceError {
 }
 
 export class ModuleInternalError extends RuntimeSourceError {
-  constructor(public moduleName: string, node?:ast.Node) {
+  constructor(public moduleName: string, node?: ast.Node) {
     super(node)
   }
 

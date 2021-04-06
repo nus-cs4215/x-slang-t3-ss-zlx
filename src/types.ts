@@ -196,7 +196,7 @@ export interface Scheduler {
  */
 export interface Directive extends ast.ExpressionStatement {
   type: 'ExpressionStatement'
-  expression:ast.Literal
+  expression: ast.Literal
   directive: string
 }
 

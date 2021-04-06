@@ -138,12 +138,12 @@ export interface BlockStatement extends BaseStatement {
 }
 
 export interface SimpleStatement extends BaseStatement {
-  type: 'SimpleStatement',
+  type: 'SimpleStatement'
   value: AssignmentExpression | BinaryExpression | UnaryExpression | ConditionalExpression
 }
 
 export interface CompoundStatement extends BaseStatement {
-  type: 'CompoundStatement',
+  type: 'CompoundStatement'
   value: ConditionalExpression
 }
 
@@ -422,7 +422,7 @@ export interface CatchClause extends BaseNode {
 }
 
 export interface Name extends BaseNode {
-  type: 'Name',
+  type: 'Name'
   name: string
 }
 
@@ -434,17 +434,17 @@ export interface Identifier extends BaseNode, BaseExpression, BasePattern {
 export type Value = Number | Bool | String
 
 export interface Number extends BaseNode {
-  type: 'Number',
+  type: 'Number'
   value: number
 }
 
 export interface Bool extends BaseNode {
-  type: 'Bool',
+  type: 'Bool'
   value: boolean
 }
 
 export interface String extends BaseNode {
-  type: 'String',
+  type: 'String'
   value: string
 }
 
