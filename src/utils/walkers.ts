@@ -2,7 +2,7 @@
 acorn.Node differs from estree.Node, so we have this file to handle the `as any` type coercions.
  */
 
-import * as walkers from 'acorn-walk'
+import * as walkers from 'walkast'
 import { Node } from '../parser/ast'
 // import { Node } from 'estree'
 export type FullWalkerCallback<TState> = (node: Node, state: TState, type: string) => void
