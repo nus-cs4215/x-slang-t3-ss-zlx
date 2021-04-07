@@ -4,10 +4,11 @@ const util = require('util')
 import * as ast from './ast'
 import { Context, ErrorSeverity, ErrorType, SourceError } from '../types'
 import { stripIndent } from '../utils/formatters'
-import { ANTLRInputStream, CommonTokenStream, 
-  // ParserRuleContext 
-} 
-  from 'antlr4ts'
+import {
+  ANTLRInputStream,
+  CommonTokenStream
+  // ParserRuleContext
+} from 'antlr4ts'
 // import { CalcLexer } from '../lang/CalcLexer'
 // import { ExpressionContext } from '../lang/Python3Lexer'
 import { Python3Parser } from '../lang/Python3Parser'
@@ -63,19 +64,19 @@ import { Expr_stmtContext } from '../lang/Python3Parser'
 // import { Test_nocondContext } from '../lang/Python3Parser'
 // import { LambdefContext } from '../lang/Python3Parser'
 // import { Lambdef_nocondContext } from '../lang/Python3Parser'
-// import { Or_testContext } from '../lang/Python3Parser'
-// import { And_testContext } from '../lang/Python3Parser'
-// import { Not_testContext } from '../lang/Python3Parser'
-// import { ComparisonContext } from '../lang/Python3Parser'
+import { Or_testContext } from '../lang/Python3Parser'
+import { And_testContext } from '../lang/Python3Parser'
+import { Not_testContext } from '../lang/Python3Parser'
+import { ComparisonContext } from '../lang/Python3Parser'
 // import { Comp_opContext } from '../lang/Python3Parser'
 // import { Star_exprContext } from '../lang/Python3Parser'
-// import { ExprContext } from '../lang/Python3Parser'
-// import { Xor_exprContext } from '../lang/Python3Parser'
-// import { And_exprContext } from '../lang/Python3Parser'
-// import { Shift_exprContext } from '../lang/Python3Parser'
+import { ExprContext } from '../lang/Python3Parser'
+import { Xor_exprContext } from '../lang/Python3Parser'
+import { And_exprContext } from '../lang/Python3Parser'
+import { Shift_exprContext } from '../lang/Python3Parser'
 import { Arith_exprContext } from '../lang/Python3Parser'
-// import { TermContext } from '../lang/Python3Parser'
-// import { FactorContext } from '../lang/Python3Parser'
+import { TermContext } from '../lang/Python3Parser'
+import { FactorContext } from '../lang/Python3Parser'
 // import { PowerContext } from '../lang/Python3Parser'
 // import { AtomContext } from '../lang/Python3Parser'
 // import { Testlist_compContext } from '../lang/Python3Parser'
@@ -117,7 +118,7 @@ import { NumberContext } from '../lang/Python3Parser'
 // import { ParseTree } from 'antlr4ts/tree/ParseTree'
 // import { RuleNode } from 'antlr4ts/tree/RuleNode'
 // import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
-import {AbstractParseTreeVisitor} from 'antlr4ts/tree/AbstractParseTreeVisitor'
+import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor'
 
 export class DisallowedConstructError implements SourceError {
   public type = ErrorType.SYNTAX
@@ -204,10 +205,12 @@ export class TrailingCommaError implements SourceError {
   }
 }
 
-class PythonProgramGenerator extends AbstractParseTreeVisitor<ast.Program> implements Python3Visitor<ast.Program> {
+class PythonProgramGenerator
+  extends AbstractParseTreeVisitor<ast.Program>
+  implements Python3Visitor<ast.Program> {
   defaultResult(): ast.Program {
     // throw new Error("Method not implemented")
-    return undefined as unknown as ast.Program
+    return (undefined as unknown) as ast.Program
   }
   visitFile_input(ctx: File_inputContext): ast.Program {
     console.log('visitFile_input')
@@ -220,10 +223,12 @@ class PythonProgramGenerator extends AbstractParseTreeVisitor<ast.Program> imple
   }
 }
 
-class PythonStatementGenerator extends AbstractParseTreeVisitor<ast.Statement> implements Python3Visitor<ast.Statement> {
+class PythonStatementGenerator
+  extends AbstractParseTreeVisitor<ast.Statement>
+  implements Python3Visitor<ast.Statement> {
   defaultResult(): ast.Statement {
     // throw new Error("Method not implemented")
-    return undefined as unknown as ast.Statement
+    return (undefined as unknown) as ast.Statement
   }
   visitSimple_stmt(tree: Simple_stmtContext): ast.Statement {
     let stmts = tree.small_stmt().map(stmt => this.visit(stmt))
@@ -233,28 +238,254 @@ class PythonStatementGenerator extends AbstractParseTreeVisitor<ast.Statement> i
   visitExpr_stmt(tree: Expr_stmtContext): ast.Statement {
     let test_list_star_expr = tree.testlist_star_expr()
     if (test_list_star_expr.length !== 1) {
-      throw new FatalSyntaxError({start: {line: tree._start.line, column: tree._start.charPositionInLine}, 
-        end: {line: tree._stop!.line, column: tree._stop!.charPositionInLine}}, "Multiple aug expressions not supported")
+      throw new FatalSyntaxError(
+        {
+          start: { line: tree._start.line, column: tree._start.charPositionInLine },
+          end: { line: tree._stop!.line, column: tree._stop!.charPositionInLine }
+        },
+        'Multiple aug expressions not supported'
+      )
     } // TODO : HANDLE OTHER CASES
     let expr = test_list_star_expr[0]
     const generator = new PythonExpressionGenerator()
-    return { type: 'ExpressionStatement', expression: generator.visit(expr)}
+    return { type: 'ExpressionStatement', expression: generator.visit(expr) }
   }
 }
 
-class PythonExpressionGenerator extends AbstractParseTreeVisitor<ast.Expression> implements Python3Visitor<ast.Expression> {
+class PythonExpressionGenerator
+  extends AbstractParseTreeVisitor<ast.Expression>
+  implements Python3Visitor<ast.Expression> {
   defaultResult(): ast.Expression {
     // throw new Error("Method not implemented")
-    return undefined as unknown as ast.Expression
+    return (undefined as unknown) as ast.Expression
   }
 
   visitNumber(tree: NumberContext): ast.Expression {
     return {
-      type: "Literal",
+      type: 'Literal',
       value: parseInt(tree.text),
       raw: tree.text
     }
   }
+
+  // Visit a parse tree produced by Python3Parser#or_test.
+  visitOr_test(ctx: Or_testContext): ast.Expression {
+    console.log('visitOr_test')
+    const length = ctx.childCount
+    let value = this.visit(ctx.and_test(0))
+    for (let i = 1; i * 2 < length; i = i + 1) {
+      if (ctx.OR(i - 1) !== undefined) {
+        value = {
+          type: 'BinaryExpression',
+          operator: 'or',
+          left: value,
+          right: this.visit(ctx.and_test(i))
+        }
+      }
+    }
+    return value
+  }
+
+  // Visit a parse tree produced by Python3Parser#and_test.
+  visitAnd_test(ctx: And_testContext): ast.Expression {
+    console.log('visitAnd_test')
+    const length = ctx.childCount
+    let value = this.visit(ctx.not_test(0))
+    for (let i = 1; i * 2 < length; i = i + 1) {
+      if (ctx.AND(i - 1) !== undefined) {
+        value = {
+          type: 'BinaryExpression',
+          operator: 'and',
+          left: value,
+          right: this.visit(ctx.not_test(i))
+        }
+      }
+    }
+    return value
+  }
+
+  // Visit a parse tree produced by Python3Parser#not_test.
+  visitNot_test(ctx: Not_testContext): ast.Expression {
+    console.log('visitNot_test')
+    if (ctx.NOT() !== undefined) {
+      return {
+        type: 'UnaryExpression',
+        operator: 'not',
+        prefix: true,
+        argument: this.visit(ctx.not_test()!)
+      }
+    } else {
+      return this.visit(ctx.comparison()!)
+    }
+  }
+
+  // Visit a parse tree produced by Python3Parser#comparison.
+  visitComparison(ctx: ComparisonContext): ast.Expression {
+    console.log('visitComparison')
+    const length = ctx.childCount
+    let value = this.visit(ctx.star_expr(0))
+    for (let i = 1; i * 2 < length; i = i + 1) {
+      if (ctx.comp_op(i - 1).text === '<') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '<',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === '>') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '>',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === '==') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '==',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === '>=') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '>=',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === '<=') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '<=',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === '<>') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '!=',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === '!=') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '!=',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === 'in') {
+        value = {
+          type: 'BinaryExpression',
+          operator: 'in',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === 'not in') {
+        value = {
+          type: 'BinaryExpression',
+          operator: 'not in',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === 'is') {
+        value = {
+          type: 'BinaryExpression',
+          operator: 'is',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      } else if (ctx.comp_op(i - 1).text === 'is not') {
+        value = {
+          type: 'BinaryExpression',
+          operator: 'is not',
+          left: value,
+          right: this.visit(ctx.star_expr(i))
+        }
+      }
+    }
+    return value
+  }
+
+  // Visit a parse tree produced by Python3Parser#expr.
+  visitExpr(ctx: ExprContext): ast.Expression {
+    console.log('visitExpr')
+    const length = ctx.childCount
+    let value = this.visit(ctx.xor_expr(0))
+    for (let i = 1; i * 2 < length; i = i + 1) {
+      if (ctx.getChild(i * 2 - 1).text === '|') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '|',
+          left: value,
+          right: this.visit(ctx.xor_expr(i))
+        }
+      }
+    }
+    return value
+  }
+
+  // Visit a parse tree produced by Python3Parser#xor_expr.
+  visitXor_expr(ctx: Xor_exprContext): ast.Expression {
+    console.log('visitXor_expr')
+    const length = ctx.childCount
+    let value = this.visit(ctx.and_expr(0))
+    for (let i = 1; i * 2 < length; i = i + 1) {
+      if (ctx.getChild(i * 2 - 1).text === '^') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '^',
+          left: value,
+          right: this.visit(ctx.and_expr(i))
+        }
+      }
+    }
+    return value
+  }
+
+  // Visit a parse tree produced by Python3Parser#and_expr.
+  visitAnd_expr(ctx: And_exprContext): ast.Expression {
+    console.log('visitAnd_expr')
+    const length = ctx.childCount
+    let value = this.visit(ctx.shift_expr(0))
+    for (let i = 1; i * 2 < length; i = i + 1) {
+      if (ctx.getChild(i * 2 - 1).text === '&') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '&',
+          left: value,
+          right: this.visit(ctx.shift_expr(i))
+        }
+      }
+    }
+    return value
+  }
+
+  // Visit a parse tree produced by Python3Parser#shift_expr.
+  visitShift_expr(ctx: Shift_exprContext): ast.Expression {
+    console.log('visitShift_expr')
+    const length = ctx.childCount
+    let value = this.visit(ctx.arith_expr(0))
+    for (let i = 1; i * 2 < length; i = i + 1) {
+      if (ctx.getChild(i * 2 - 1).text === '<<') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '<<',
+          left: value,
+          right: this.visit(ctx.arith_expr(i))
+        }
+      } else if (ctx.getChild(i * 2 - 1).text === '>>') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '>>',
+          left: value,
+          right: this.visit(ctx.arith_expr(i))
+        }
+      }
+    }
+    return value
+  }
+
   visitArith_expr(tree: Arith_exprContext): ast.Expression {
     const length = tree.childCount
     let value = this.visit(tree.term(0))
@@ -277,10 +508,213 @@ class PythonExpressionGenerator extends AbstractParseTreeVisitor<ast.Expression>
     }
     return value
   }
+
+  // Visit a parse tree produced by Python3Parser#term.
+  visitTerm(ctx: TermContext): ast.Expression {
+    console.log('visitTerm')
+    const length = ctx.childCount
+    let value = this.visit(ctx.factor(0))
+    for (let i = 1; i * 2 < length; i = i + 1) {
+      if (ctx.getChild(i * 2 - 1).text === '*') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '*',
+          left: value,
+          right: this.visit(ctx.factor(i))
+        }
+      } else if (ctx.getChild(i * 2 - 1).text === '/') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '/',
+          left: value,
+          right: this.visit(ctx.factor(i))
+        }
+      } else if (ctx.getChild(i * 2 - 1).text === '%') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '%',
+          left: value,
+          right: this.visit(ctx.factor(i))
+        }
+      } else if (ctx.getChild(i * 2 - 1).text === '//') {
+        value = {
+          type: 'BinaryExpression',
+          operator: '//',
+          left: value,
+          right: this.visit(ctx.factor(i))
+        }
+      } else if (ctx.getChild(i * 2 - 1).text === '@') {
+        throw new FatalSyntaxError(
+          {
+            start: { line: ctx._start.line, column: ctx._start.charPositionInLine },
+            end: { line: ctx._stop!.line, column: ctx._stop!.charPositionInLine }
+          },
+          '@ operator expressions not supported'
+        )
+      }
+    }
+    return value
+  }
+
+  // Visit a parse tree produced by Python3Parser#factor.
+  visitFactor(ctx: FactorContext): ast.Expression {
+    console.log('visitFactor')
+    if (ctx.ADD() !== undefined) {
+      return {
+        type: 'UnaryExpression',
+        operator: '+',
+        prefix: true,
+        argument: this.visit(ctx.factor()!)
+      }
+    } else if (ctx.MINUS() !== undefined) {
+      return {
+        type: 'UnaryExpression',
+        operator: '-',
+        prefix: true,
+        argument: this.visit(ctx.factor()!)
+      }
+    } else if (ctx.NOT_OP() !== undefined) {
+      return {
+        type: 'UnaryExpression',
+        operator: '~',
+        prefix: true,
+        argument: this.visit(ctx.factor()!)
+      }
+    } else {
+      return this.visit(ctx.power()!)
+    }
+  }
+
+  // Visit a parse tree produced by Python3Parser#power.
+  // visitPower(ctx: PowerContext): ast.Expression {
+  //   console.log('visitPower')
+  //   let atom = this.visit(ctx.atom())
+  //   const trailer_list = []
+  //   if (ctx.trailer().length > 0) {
+  //     for (let i = 0; i < ctx.trailer().length; i++) {
+  //       trailer_list.push(this.visit(ctx.trailer(i)))
+  //     }
+  //   }
+  //   if (trailer_list.length !== 0) {
+  //     atom = { type: 'Trailer', base: atom, trailer: trailer_list }
+  //     //Property return a dict, arglist and subscriptlist return a list
+  //   }
+  //   if (ctx.factor() !== undefined) {
+  //     atom = {
+  //       type: 'BinaryExpression',
+  //       operator: '**',
+  //       left: atom,
+  //       right: this.visit(ctx.factor())
+  //     }
+  //   }
+  //   return atom
+  // }
+
+  // Visit a parse tree produced by Python3Parser#atom.
+  // visitAtom(ctx: AtomContext): ast.Expression {
+  //   console.log('visitAtom')
+  //   if (ctx.TRUE() !== undefined) {
+  //     return { type: 'Literal', value: true }
+  //   } else if (ctx.FALSE() !== undefined) {
+  //     return { type: 'Literal', value: false }
+  //   } else if (ctx.NONE() !== undefined) {
+  //     return { type: 'Literal', value: null }
+  //   } else if (ctx.number() !== undefined) {
+  //     return this.visit(ctx.number()!)
+  //   } else if (ctx.NAME() !== undefined) {
+  //     return { type: 'Identifier', name: ctx.NAME()!.text }
+  //   } else if (ctx.str().length > 0) {
+  //     let value = ''
+  //     for (let i = 0; i < ctx.str().length; i++) {
+  //       value = value + ctx.str(i).text
+  //     }
+  //     return { type: 'Literal', value: value }
+  //   } else if (ctx.OPEN_PAREN() !== undefined) {
+  //     if (ctx.yield_expr() !== undefined) {
+  //       return this.visit(ctx.yield_expr()!)
+  //     } else if (ctx.testlist_comp() !== undefined) {
+  //       return {
+  //         type: 'SequenceExpression',
+  //         expressions: this.visit(ctx.testlist_comp()!)
+  //       }
+  //     } else {
+  //       return { type: 'SequenceExpression', expressions: new Array<ast.Expression>() }
+  //     }
+  //   } else if (ctx.OPEN_BRACK() !== undefined) {
+  //     if (ctx.testlist_comp() !== undefined) {
+  //       return this.visit(ctx.testlist_comp())
+  //     } else {
+  //       return { type: 'List', element: [], comp_for: null }
+  //     }
+  //   } else if (ctx.OPEN_BRACE() !== undefined) {
+  //     if (ctx.dictorsetmaker() !== undefined) {
+  //       return this.visit(ctx.dictorsetmaker())
+  //     } else {
+  //       return { type: 'ArrayExpression', elements: new Array<ast.Expression>() }
+  //     }
+  //   } else {
+  //     throw new FatalSyntaxError(
+  //       {
+  //         start: { line: ctx._start.line, column: ctx._start.charPositionInLine },
+  //         end: { line: ctx._stop!.line, column: ctx._stop!.charPositionInLine }
+  //       },
+  //       'Atom: Not defined'
+  //     )
+  //   }
+  // }
+
+  // //   // Visit a parse tree produced by Python3Parser#testlist_comp.
+  // visitTestlist_comp(ctx: Testlist_compContext): ast.Expression {
+  //   console.log('visitTestlist_comp')
+  //   if (ctx.comp_for() !== undefined) {
+  //     throw new FatalSyntaxError(
+  //       {
+  //         start: { line: ctx._start.line, column: ctx._start.charPositionInLine },
+  //         end: { line: ctx._stop!.line, column: ctx._stop!.charPositionInLine }
+  //       },
+  //       'comp_for: Not defined'
+  //     )
+  //     //TODO implement comp_for
+  //     //[i for i in range(4)]
+  //     // return {
+  //     //   type: 'List',
+  //     //   element: this.visit(ctx.test(0)),
+  //     //   comp_for: this.visit(ctx.comp_for())
+  //     // }
+  //   } else {
+  //     //[1,2,3]
+  //     const element = []
+  //     for (let i = 0; i < ctx.test().length; i++) {
+  //       element.push(this.visit(ctx.test(i)))
+  //     }
+  //     return {
+  //       type: 'ArrayExpression',
+  //       elements: element
+  //     }
+  //   }
+  // }
+
+  // // Visit a parse tree produced by Python3Parser#str.
+  // visitStr(ctx: StrContext): ast.Expression {
+  //   console.log('visitStr')
+  //   //TODO: Support r String
+  //   let value = null
+  //   if (ctx.STRING_LITERAL() !== undefined) {
+  //     value = ctx.STRING_LITERAL()!.text
+  //   } else {
+  //     value = ctx.BYTES_LITERAL()!.text
+  //   }
+  //   if (value.startsWith('"')) {
+  //     value = value.replace(/^"+|"+$/g, '')
+  //   } else if (value.startsWith("'")) {
+  //     value = value.replace(/^'+|'+$/g, '')
+  //   }
+  //   return { type: 'Literal', value: value }
+  // }
 }
 
 // class PythonExpressionGenerator2 implements Python3Visitor<ast.Expression> {
-  
+
 //   // Visit a parse tree produced by Python3Parser#decorator.
 //   visitDecorator(ctx: DecoratorContext): ast.Expression {
 //     console.log('visitDecorator')
@@ -966,176 +1400,37 @@ class PythonExpressionGenerator extends AbstractParseTreeVisitor<ast.Expression>
 //     }
 //   }
 
-//   // Visit a parse tree produced by Python3Parser#or_test.
-//   visitOr_test(ctx: Or_testContext): ast.Expression {
-//     console.log('visitOr_test')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.and_test(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (ctx.OR(i - 1) !== undefined) {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: 'or',
-//           left: value,
-//           right: this.visit(ctx.and_test(i))
-//         }
-//       }
+// Visit a parse tree produced by Python3Parser#comp_op.
+// visitComp_op(ctx: Comp_opContext): ast.Expression {
+//   console.log('visitComp_op')
+//   const length = ctx.childCount
+//   if (length === 1) {
+//     if (ctx.getChild(0).text === '<') {
+//       return '<'
+//     } else if (ctx.getChild(0).text === '>') {
+//       return '>'
+//     } else if (ctx.getChild(0).text === '==') {
+//       return '=='
+//     } else if (ctx.getChild(0).text === '>=') {
+//       return '>='
+//     } else if (ctx.getChild(0).text === '<=') {
+//       return '<='
+//     } else if (ctx.getChild(0).text === '<>') {
+//       return '<>'
+//     } else if (ctx.getChild(0).text === '!=') {
+//       return '!='
+//     } else if (ctx.getChild(0).text === 'is') {
+//       return 'is'
+//     } else if (ctx.getChild(0).text === 'in') {
+//       return 'in'
 //     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#and_test.
-//   visitAnd_test(ctx: And_testContext): ast.Expression {
-//     console.log('visitAnd_test')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.not_test(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (ctx.AND(i - 1) !== undefined) {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: 'and',
-//           left: value,
-//           right: this.visit(ctx.not_test(i))
-//         }
-//       }
-//     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#not_test.
-//   visitNot_test(ctx: Not_testContext): ast.Expression {
-//     console.log('visitNot_test')
-//     if (ctx.NOT() !== undefined) {
-//       return {
-//         type: 'UnaryExpression',
-//         operator: 'not',
-//         operand: this.visit(ctx.not_test())
-//       }
-//     } else {
-//       return this.visit(ctx.comparison())
+//   } else {
+//     if (ctx.getChild(0).text === 'not') {
+//       return 'not in'
 //     }
 //   }
-
-//   // Visit a parse tree produced by Python3Parser#comparison.
-//   visitComparison(ctx: ComparisonContext): ast.Expression {
-//     console.log('visitComparison')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.star_expr(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (this.visit(ctx.comp_op(i - 1)) === '<') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '<',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === '>') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '>',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === '==') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '==',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === '>=') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '>=',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === '<=') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '<=',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === '<>') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '<>',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === '!=') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '!=',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === 'in') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: 'in',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === 'not in') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: 'not in',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === 'is') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: 'is',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       } else if (this.visit(ctx.comp_op(i - 1)) === 'is not') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: 'is not',
-//           left: value,
-//           right: this.visit(ctx.star_expr(i))
-//         }
-//       }
-//     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#comp_op.
-//   visitComp_op(ctx: Comp_opContext): ast.Expression {
-//     console.log('visitComp_op')
-//     const length = ctx.childCount
-//     if (length === 1) {
-//       if (ctx.getChild(0).text === '<') {
-//         return '<'
-//       } else if (ctx.getChild(0).text === '>') {
-//         return '>'
-//       } else if (ctx.getChild(0).text === '==') {
-//         return '=='
-//       } else if (ctx.getChild(0).text === '>=') {
-//         return '>='
-//       } else if (ctx.getChild(0).text === '<=') {
-//         return '<='
-//       } else if (ctx.getChild(0).text === '<>') {
-//         return '<>'
-//       } else if (ctx.getChild(0).text === '!=') {
-//         return '!='
-//       } else if (ctx.getChild(0).text === 'is') {
-//         return 'is'
-//       } else if (ctx.getChild(0).text === 'in') {
-//         return 'in'
-//       }
-//     } else {
-//       if (ctx.getChild(0).text === 'not') {
-//         return 'not in'
-//       } else if (ctx.getChild(0).text === 'is') {
-//         return 'is not'
-//       }
-//     }
-//   }
+//   return 'is not'
+// }
 
 //   // Visit a parse tree produced by Python3Parser#star_expr.
 //   visitStar_expr(ctx: Star_exprContext): ast.Expression {
@@ -1144,273 +1439,6 @@ class PythonExpressionGenerator extends AbstractParseTreeVisitor<ast.Expression>
 //       return { type: 'StarExpression', value: this.visit(ctx.expr()) }
 //     }
 //     return this.visit(ctx.expr())
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#expr.
-//   visitExpr(ctx: ExprContext): ast.Expression {
-//     console.log('visitExpr')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.xor_expr(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (ctx.getChild(i * 2 - 1).text === '|') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '|',
-//           left: value,
-//           right: this.visit(ctx.xor_expr(i))
-//         }
-//       }
-//     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#xor_expr.
-//   visitXor_expr(ctx: Xor_exprContext): ast.Expression {
-//     console.log('visitXor_expr')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.and_expr(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (ctx.getChild(i * 2 - 1).text === '^') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '^',
-//           left: value,
-//           right: this.visit(ctx.and_expr(i))
-//         }
-//       }
-//     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#and_expr.
-//   visitAnd_expr(ctx: And_exprContext): ast.Expression {
-//     console.log('visitAnd_expr')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.shift_expr(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (ctx.getChild(i * 2 - 1).text === '&') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '&',
-//           left: value,
-//           right: this.visit(ctx.shift_expr(i))
-//         }
-//       }
-//     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#shift_expr.
-//   visitShift_expr(ctx: Shift_exprContext): ast.Expression {
-//     console.log('visitShift_expr')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.arith_expr(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (ctx.getChild(i * 2 - 1).text === '<<') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '<<',
-//           left: value,
-//           right: this.visit(ctx.arith_expr(i))
-//         }
-//       } else if (ctx.getChild(i * 2 - 1).text === '>>') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '>>',
-//           left: value,
-//           right: this.visit(ctx.arith_expr(i))
-//         }
-//       }
-//     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#arith_expr.
-//   visitArith_expr(ctx: Arith_exprContext): ast.Expression {
-//     console.log('visitArith_expr')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.term(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (ctx.getChild(i * 2 - 1).text === '+') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '+',
-//           left: value,
-//           right: this.visit(ctx.term(i))
-//         }
-//       } else if (ctx.getChild(i * 2 - 1).text === '-') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '-',
-//           left: value,
-//           right: this.visit(ctx.term(i))
-//         }
-//       }
-//     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#term.
-//   visitTerm(ctx: TermContext): ast.Expression {
-//     console.log('visitTerm')
-//     const length = ctx.childCount
-//     let value = this.visit(ctx.factor(0))
-//     for (let i = 1; i * 2 < length; i = i + 1) {
-//       if (ctx.getChild(i * 2 - 1).text === '*') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '*',
-//           left: value,
-//           right: this.visit(ctx.factor(i))
-//         }
-//       } else if (ctx.getChild(i * 2 - 1).text === '/') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '/',
-//           left: value,
-//           right: this.visit(ctx.factor(i))
-//         }
-//       } else if (ctx.getChild(i * 2 - 1).text === '%') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '%',
-//           left: value,
-//           right: this.visit(ctx.factor(i))
-//         }
-//       } else if (ctx.getChild(i * 2 - 1).text === '//') {
-//         value = {
-//           type: 'BinaryExpression',
-//           operator: '//',
-//           left: value,
-//           right: this.visit(ctx.factor(i))
-//         }
-//       } else if (ctx.getChild(i * 2 - 1).text === '@') {
-//         throw '@ operator has not been implemented'
-//       }
-//     }
-//     return value
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#factor.
-//   visitFactor(ctx: FactorContext): ast.Expression {
-//     console.log('visitFactor')
-//     if (ctx.ADD() !== undefined) {
-//       return {
-//         type: 'UnaryExpression',
-//         operator: '+',
-//         operand: this.visit(ctx.factor())
-//       }
-//     } else if (ctx.MINUS() !== undefined) {
-//       return {
-//         type: 'UnaryExpression',
-//         operator: '-',
-//         operand: this.visit(ctx.factor())
-//       }
-//     } else if (ctx.NOT_OP() !== undefined) {
-//       return {
-//         type: 'UnaryExpression',
-//         operator: '~',
-//         operand: this.visit(ctx.factor())
-//       }
-//     } else if (ctx.power() !== undefined) {
-//       return this.visit(ctx.power())
-//     }
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#power.
-//   visitPower(ctx: PowerContext): ast.Expression {
-//     console.log('visitPower')
-//     let atom = this.visit(ctx.atom())
-//     const trailer_list = []
-//     if (ctx.trailer().length > 0) {
-//       for (let i = 0; i < ctx.trailer().length; i++) {
-//         trailer_list.push(this.visit(ctx.trailer(i)))
-//       }
-//     }
-//     if (trailer_list.length !== 0) {
-//       atom = { type: 'Trailer', base: atom, trailer: trailer_list }
-//       //Property return a dict, arglist and subscriptlist return a list
-//     }
-//     if (ctx.factor() !== undefined) {
-//       atom = {
-//         type: 'BinaryExpression',
-//         operator: '**',
-//         left: atom,
-//         right: this.visit(ctx.factor())
-//       }
-//     }
-//     return atom
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#atom.
-//   visitAtom(ctx: AtomContext): ast.Expression {
-//     console.log('visitAtom')
-//     if (ctx.TRUE() !== undefined) {
-//       return { type: 'Bool', value: true }
-//     } else if (ctx.FALSE() !== undefined) {
-//       return { type: 'Bool', value: false }
-//     } else if (ctx.NONE() !== undefined) {
-//       return { type: 'Null', value: null }
-//     } else if (ctx.number() !== undefined) {
-//       return this.visit(ctx.number())
-//     } else if (ctx.NAME() !== undefined) {
-//       return { type: 'Name', value: ctx.NAME().text }
-//     } else if (ctx.str().length > 0) {
-//       let value = ''
-//       for (let i = 0; i < ctx.str().length; i++) {
-//         value = value + this.visit(ctx.str(i)).value
-//       }
-//       return { type: 'String', value: value }
-//     } else if (ctx.OPEN_PAREN() !== undefined) {
-//       if (ctx.yield_expr() !== undefined) {
-//         return this.visit(ctx.yield_expr())
-//       } else if (ctx.testlist_comp() !== undefined) {
-//         return {
-//           type: 'Tuple',
-//           value: this.visit(ctx.testlist_comp())
-//         }
-//       } else {
-//         return { type: 'Tuple', value: null }
-//       }
-//     } else if (ctx.OPEN_BRACK() !== undefined) {
-//       if (ctx.testlist_comp() !== undefined) {
-//         return this.visit(ctx.testlist_comp())
-//       } else {
-//         return { type: 'List', element: [], comp_for: null }
-//       }
-//     } else if (ctx.OPEN_BRACE() !== undefined) {
-//       if (ctx.dictorsetmaker() !== undefined) {
-//         return this.visit(ctx.dictorsetmaker())
-//       } else {
-//         return { type: 'Dict', body: [] }
-//       }
-//     } else {
-//       return 'Atom: Not Implemented!'
-//     }
-//   }
-
-//   // Visit a parse tree produced by Python3Parser#testlist_comp.
-//   visitTestlist_comp(ctx: Testlist_compContext): ast.Expression {
-//     console.log('visitTestlist_comp')
-//     if (ctx.comp_for() !== undefined) {
-//       //[i for i in range(4)]
-//       return {
-//         type: 'List',
-//         element: this.visit(ctx.test(0)),
-//         comp_for: this.visit(ctx.comp_for())
-//       }
-//     } else {
-//       //[1,2,3]
-//       const element = []
-//       for (let i = 0; i < ctx.test().length; i++) {
-//         element.push(this.visit(ctx.test(i)))
-//       }
-//       return {
-//         type: 'List',
-//         element: element,
-//         comp_for: null
-//       }
-//     }
 //   }
 
 //   // Visit a parse tree produced by Python3Parser#trailer.
@@ -1725,24 +1753,6 @@ class PythonExpressionGenerator extends AbstractParseTreeVisitor<ast.Expression>
 //     }
 //   }
 
-//   // Visit a parse tree produced by Python3Parser#str.
-//   visitStr(ctx: StrContext): ast.Expression {
-//     console.log('visitStr')
-//     //TODO: Support r String
-//     let value = null
-//     if (ctx.STRING_LITERAL() !== undefined) {
-//       value = ctx.STRING_LITERAL().text
-//     } else if (ctx.BYTES_LITERAL() !== undefined) {
-//       value = ctx.BYTES_LITERAL().text
-//     }
-//     if (value.startsWith('"')) {
-//       value = value.replace(/^"+|"+$/g, '')
-//     } else if (value.startsWith("'")) {
-//       value = value.replace(/^'+|'+$/g, '')
-//     }
-//     return { type: 'String', value: value }
-//   }
-
 //   // Visit a parse tree produced by Python3Parser#number.
 //   visitNumber(ctx: NumberContext): ast.Expression {
 //     console.log('visitNumber')
@@ -1782,7 +1792,7 @@ class PythonExpressionGenerator extends AbstractParseTreeVisitor<ast.Expression>
 // function convertSimpleStatementContext(simplStmt:)
 
 // function convertStatementContext(stmt: StmtContext) : ast.Statement {
-//   let simpleStmt = stmt.simple_stmt() 
+//   let simpleStmt = stmt.simple_stmt()
 //   if (simple_stmt !== undefined){
 //     return convertStatementContext
 //   }
@@ -1805,7 +1815,7 @@ function convertSource(expression: File_inputContext): ast.Program {
 
 export function parse(source: string, context: Context) {
   let program: ast.Program | undefined
- // source = readFileSync('src/parser/input.py', 'utf-8')
+  // source = readFileSync('src/parser/input.py', 'utf-8')
   if (context.variant === 'python') {
     const inputStream = new ANTLRInputStream(source)
     const lexer = new Python3Lexer(inputStream)
@@ -1814,7 +1824,7 @@ export function parse(source: string, context: Context) {
     parser.buildParseTree = true
     const tree = parser.file_input()
     program = convertSource(tree)
-    console.log(util.inspect(program, {showHidden: false, depth: null}))
+    console.log(util.inspect(program, { showHidden: false, depth: null }))
     /*const visitor = new PythonExpressionGenerator()
     console.log('Visitor')
     const result = visitor.visit(tree)

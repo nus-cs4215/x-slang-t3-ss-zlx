@@ -385,12 +385,12 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 // tslint:enable:object-literal-shorthand
 
 export function* evaluate(node: ast.Node, context: Context) {
-  console.log('1111111111111111111111111111')
-  console.log(context)
+  //console.log('1111111111111111111111111111')
+  //console.log(context)
   yield* visit(context, node)
-  console.log('2222222222222222222222222222')
+  //console.log('2222222222222222222222222222')
 
-  console.log(context.runtime.nodes)
+  //console.log(context.runtime.nodes)
   const result = yield* evaluators[node.type](node, context)
   yield* leave(context)
   return result
