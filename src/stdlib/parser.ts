@@ -122,7 +122,7 @@ const transformers: ASTTransformers = new Map([
   [
     'ReturnStatement',
     (node: ast.ReturnStatement) => {
-      return vector_to_list(['return_statement', transform(node.returned as ast.Expression)])
+      return vector_to_list(['return_statement', transform(node.argument as ast.Expression)])
     }
   ],
 
@@ -177,9 +177,9 @@ const transformers: ASTTransformers = new Map([
     (node: ast.ConditionalExpression) => {
       return vector_to_list([
         'conditional_expression',
-        transform(node.judge),
-        transform(node.judge_true),
-        transform(node.judge_false)
+        transform(node.test),
+        transform(node.consequent),
+        transform(node.alternate)
       ])
     }
   ],
@@ -224,10 +224,10 @@ const transformers: ASTTransformers = new Map([
   [
     'AssignmentExpression',
     (node: ast.AssignmentExpression) => {
-      if (node.left.type === 'Name') {
+      if (node.left.type === 'Identifier') {
         return vector_to_list([
           'assignment',
-          transform(node.left as ast.Name),
+          transform(node.left as ast.Identifier),
           transform(node.right)
         ])
       } else if (node.left.type === 'MemberExpression') {

@@ -9,11 +9,12 @@ import { Context, Environment, Frame, Value } from '../types'
 import { primitive } from '../utils/astCreator'
 import {
   evaluateBinaryExpression,
-  evaluateConditionalExpression,
+  // evaluateConditionalExpression,
   evaluateUnaryExpression
 } from '../utils/operators'
 import * as rttc from '../utils/rttc'
 import Closure from './closure'
+// import { stat } from 'fs'
 
 class BreakValue {}
 
@@ -98,11 +99,11 @@ const handleRuntimeError = (context: Context, error: RuntimeSourceError): never 
   throw error
 }
 
-function assignName(context: Context, name: string, value: Value) {
-  const environment = currentEnvironment(context)
-  environment.head[name] = value
-  return environment
-}
+// function assignName(context: Context, name: string, value: Value) {
+//   const environment = currentEnvironment(context)
+//   environment.head[name] = value
+//   return environment
+// }
 
 const DECLARED_BUT_NOT_YET_ASSIGNED = Symbol('Used to implement hoisting')
 
@@ -212,22 +213,30 @@ function* evaluateBlockSatement(context: Context, node: ast.BlockStatement) {
 // tslint:disable:object-literal-shorthand
 // prettier-ignore
 export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
+
+    BlockStatement: function* (node: ast.BlockStatement, context: Context) {
+      for (let i=0; i< node.body.length - 1; i++){
+        yield * evaluate(node.body[i], context)
+      } 
+      return yield * evaluate(node.body[node.body.length - 1], context)
+    },
+    
     /** Simple Values */
-    Number: function* (node: ast.Number, context: Context) {
-      return node.value
-    },
-
-    Bool: function* (node: ast.Bool, context: Context) {
-      return node.value
-    },
-
-    String: function* (node: ast.String, context: Context) {
-      return node.value
-    },
-
-    // Literal: function*(node: es.Literal, context: Context) {
-    //     return node.value
+    // Number: function* (node: ast.Number, context: Context) {
+    //   return node.value
     // },
+
+    // Bool: function* (node: ast.Bool, context: Context) {
+    //   return node.value
+    // },
+
+    // String: function* (node: ast.String, context: Context) {
+    //   return node.value
+    // },
+
+    Literal: function*(node: ast.Literal, context: Context) {
+        return node.value
+    },
 
     // TemplateLiteral: function*(node: es.TemplateLiteral) {
     //     // Expressions like `${1}` are not allowed, so no processing needed
@@ -243,10 +252,10 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     //     yield
     // },
 
-    Name: function*(node: ast.Name, context: Context) {
-        const environment = currentEnvironment(context)
-        return environment.head[node.name]
-    },
+    // Name: function*(node: ast.Name, context: Context) {
+    //     const environment = currentEnvironment(context)
+    //     return environment.head[node.name]
+    // },
 
     UnaryExpression: function*(node: ast.UnaryExpression, context: Context) {
         const value = yield* actualValue(node.argument, context)
@@ -268,23 +277,23 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         return evaluateBinaryExpression(node.operator, left, right)
     },
 
-    ConditionalExpression: function*(node: ast.ConditionalExpression, context: Context) {
-        const judge = yield* actualValue(node.judge, context)
-        const judgeTrue = yield* actualValue(node.judge_true, context)
-        const judgeFalse = yield* actualValue(node.judge_false, context)
-        const error = rttc.checkConditionalExpression(node, judge, judgeTrue, judgeFalse)
-        if (error) {
-            return handleRuntimeError(context, error)
-        }
-        return evaluateConditionalExpression(judge, judgeTrue, judgeFalse)
-    },
+    // ConditionalExpression: function*(node: ast.ConditionalExpression, context: Context) {
+    //     const judge = yield* actualValue(node.judge, context)
+    //     const judgeTrue = yield* actualValue(node.judge_true, context)
+    //     const judgeFalse = yield* actualValue(node.judge_false, context)
+    //     const error = rttc.checkConditionalExpression(node, judge, judgeTrue, judgeFalse)
+    //     if (error) {
+    //         return handleRuntimeError(context, error)
+    //     }
+    //     return evaluateConditionalExpression(judge, judgeTrue, judgeFalse)
+    // },
 
-    AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
-      const value = yield* actualValue(node.right, context)
-      const symbol = node.left.name
-      assignName(context, symbol, value)
-      return value
-    },
+    // // AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
+    // //   const value = yield* actualValue(node.right, context)
+    // //   const symbol = node.left.name
+    // //   assignName(context, symbol, value)
+    // //   return value
+    // },
 
     WhileStatement: function*(node: ast.WhileStatement, context: Context) {
       throw new Error("While statements not supported in x-slang");
@@ -319,9 +328,9 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       throw new Error("Call expressions not supported in x-slang");
     },
 
-    BlockStatement: function*(node: ast.BlockStatement, context: Context) {
-      throw new Error("Block statements not supported in x-slang");
-    },
+    // BlockStatement: function*(node: ast.BlockStatement, context: Context) {
+    //   throw new Error("Block statements not supported in x-slang");
+    // },
 
     // STRETCH GOAL
     // Not needed in Python 3, because it is a JS only type of expression
@@ -338,10 +347,10 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         return yield* evaluate(node.expression, context)
     },
 
-    ReturnStatement: function*(node: ast.ReturnStatement, context: Context) {
-        const returned = yield* actualValue(node.returned, context)
-        return returned
-    },
+    // ReturnStatement: function*(node: ast.ReturnStatement, context: Context) {
+    //     const returned = yield* actualValue(node.returned, context)
+    //     return returned
+    // },
 
 
     // STRETCH GOAL

@@ -118,7 +118,7 @@ export const returnStatement = (
   loc?: ast.SourceLocation | null
 ): ast.ReturnStatement => ({
   type: 'ReturnStatement',
-  returned,
+  argument: returned,
   loc
 })
 
@@ -150,10 +150,10 @@ export const mutateToCallExpression = (
 
 export const mutateToAssignmentExpression = (
   node: ast.Node,
-  left: ast.Name,
+  left: ast.Identifier,
   right: ast.Expression
 ) => {
-  node.type = 'Assignment'
+  node.type = 'AssignmentExpression'
   node = node as ast.AssignmentExpression
   node.left = left
   node.right = right
@@ -168,7 +168,7 @@ export const mutateToExpressionStatement = (node: ast.Node, expr: ast.Expression
 export const mutateToReturnStatement = (node: ast.Node, expr: ast.Expression) => {
   node.type = 'ReturnStatement'
   node = node as ast.ReturnStatement
-  node.returned = expr
+  node.argument = expr
 }
 
 export const mutateToMemberExpression = (
@@ -203,9 +203,9 @@ export const conditionalExpression = (
   loc?: ast.SourceLocation | null
 ): ast.ConditionalExpression => ({
   type: 'ConditionalExpression',
-  judge,
-  judge_true,
-  judge_false,
+  test: judge,
+  consequent: judge_true,
+  alternate: judge_false,
   loc
 })
 
@@ -215,10 +215,11 @@ export const arrayExpression = (elements: ast.Expression[]): ast.ArrayExpression
 })
 
 export const assignmentExpression = (
-  left: ast.Name,
+  left: ast.Identifier,
   right: ast.Expression
 ): ast.AssignmentExpression => ({
-  type: 'Assignment',
+  type: 'AssignmentExpression',
+  operator: "=",
   left,
   right
 })

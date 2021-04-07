@@ -92,7 +92,7 @@ function traverse(node: TypeAnnotatedNode<ast.Node>, constraints?: Constraint[])
       throw Error('Arrow functions not supported for x-slang')
     case 'FunctionDeclaration':
       throw Error('Function declarations  not supported for x-slang')
-    case 'Assignment':
+    case 'AssignmentExpression':
       throw Error('Assignments expressions not supported for x-slang')
     case 'ArrayExpression':
       throw Error('Array expressions not supported for x-slang')
@@ -663,7 +663,7 @@ function _infer(
       throw Error('Function declarations not supported for x-slang')
     case 'CallExpression':
       throw Error('Call expressions not supported for x-slang')
-    case 'Assignment':
+    case 'AssignmentExpression':
       throw Error('Assignment expressions not supported for x-slang')
     case 'ArrayExpression':
       throw Error('Array expressions not supported for x-slang')

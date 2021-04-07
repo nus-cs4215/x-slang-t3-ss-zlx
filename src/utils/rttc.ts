@@ -48,8 +48,8 @@ const isArray = (v: Value) => typeOf(v) === 'array'
 export const checkUnaryExpression = (node: ast.Node, operator: ast.UnaryOperator, value: Value) => {
   if ((operator === '+' || operator === '-') && !isNumber(value)) {
     return new TypeError(node, '', 'number', typeOf(value))
-  } else if (operator === 'not' && !isBool(value)) {
-    return new TypeError(node, '', 'boolean', typeOf(value))
+  // } else if (operator === 'not' && !isBool(value)) {
+  //   return new TypeError(node, '', 'boolean', typeOf(value))
   } else {
     return undefined
   }
@@ -65,11 +65,11 @@ export const checkBinaryExpression = (
     case '-':
     case '*':
     case '/':
-    case '//':
+    // case '//':
     case '%':
-    case 'and':
+    // case 'and':
     case '&':
-    case 'or':
+    // case 'or':
     case '|':
       if (!isNumber(left)) {
         return new TypeError(node, LHS, 'number', typeOf(left))
