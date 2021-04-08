@@ -336,12 +336,12 @@ class PythonStatementGenerator
     const generator = new PythonExpressionListGenerator()
     if (ctx.testlist() !== undefined) {
       return {
-        type: 'ReturnStatement',
+        type: 'ReturnPythonStatement',
         argument: generator.visit(ctx.testlist()!)
       }
     } else {
       return {
-        type: 'ReturnStatement',
+        type: 'ReturnPythonStatement',
         argument: null
       }
     }

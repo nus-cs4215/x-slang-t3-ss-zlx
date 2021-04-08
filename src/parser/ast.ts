@@ -106,7 +106,7 @@ export type Statement =
   | EmptyStatement // use
   | DebuggerStatement
   | WithStatement // use
-  | ReturnStatement // use
+  | ReturnStatement // use ReturnPythonStatement instead
   | LabeledStatement
   | BreakStatement // use
   | ContinueStatement //use
@@ -132,11 +132,17 @@ export type Statement =
   | TryPythonStatement
   | RaiseStatement
   | YieldStatement
+  | ReturnPythonStatement
 
 type BaseStatement = BaseNode
 
 export interface EmptyStatement extends BaseStatement {
   type: 'EmptyStatement'
+}
+
+export interface ReturnPythonStatement extends BaseStatement {
+  type: 'ReturnPythonStatement'
+  argument: Array<Expression> | null
 }
 
 export interface YieldStatement extends BaseStatement {
@@ -249,7 +255,7 @@ export interface SwitchStatement extends BaseStatement {
 
 export interface ReturnStatement extends BaseStatement {
   type: 'ReturnStatement'
-  argument?: Array<Expression> | null
+  argument?: Expression | null
 }
 
 export interface ThrowStatement extends BaseStatement {
