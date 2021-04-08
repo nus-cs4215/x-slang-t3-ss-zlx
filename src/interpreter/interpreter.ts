@@ -1,4 +1,5 @@
 /* tslint:disable:max-classes-per-file */
+const util = require('util')
 import * as ast from '../parser/ast'
 // import * as es from 'estree'
 import * as constants from '../constants'
@@ -9,11 +10,13 @@ import { Context, Environment, Frame, Value } from '../types'
 import { primitive } from '../utils/astCreator'
 import {
   evaluateBinaryExpression,
+  evaluateConditionalExpression,
   // evaluateConditionalExpression,
   evaluateUnaryExpression
 } from '../utils/operators'
 import * as rttc from '../utils/rttc'
 import Closure from './closure'
+// import { constant } from 'lodash'
 // import { stat } from 'fs'
 
 class BreakValue {}
@@ -99,11 +102,23 @@ const handleRuntimeError = (context: Context, error: RuntimeSourceError): never 
   throw error
 }
 
-// function assignName(context: Context, name: string, value: Value) {
-//   const environment = currentEnvironment(context)
-//   environment.head[name] = value
-//   return environment
-// }
+function getVariable(context: Context, name: string) {
+  let environment: Environment | null = context.runtime.environments[0]
+  while(environment) {
+    if (environment.head.hasOwnProperty(name)) {
+      return environment.head[name]
+    } else {
+      environment = environment.tail
+    }
+  }
+  return handleRuntimeError(context, new errors.UndefinedVariable(name, context.runtime.nodes[0]))
+}
+
+function assignVariable(context: Context, name: string, value: Value) {
+  let environment: Environment | null = context.runtime.environments[0]
+  environment.head[name] = value
+  return undefined
+}
 
 const DECLARED_BUT_NOT_YET_ASSIGNED = Symbol('Used to implement hoisting')
 
@@ -212,7 +227,7 @@ function* evaluateBlockSatement(context: Context, node: ast.BlockStatement) {
  */
 // tslint:disable:object-literal-shorthand
 // prettier-ignore
-export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
+export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {  
 
     BlockStatement: function* (node: ast.BlockStatement, context: Context) {
       for (let i=0; i< node.body.length - 1; i++){
@@ -220,28 +235,18 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       } 
       return yield * evaluate(node.body[node.body.length - 1], context)
     },
-    
-    /** Simple Values */
-    // Number: function* (node: ast.Number, context: Context) {
-    //   return node.value
-    // },
-
-    // Bool: function* (node: ast.Bool, context: Context) {
-    //   return node.value
-    // },
-
-    // String: function* (node: ast.String, context: Context) {
-    //   return node.value
-    // },
 
     Literal: function*(node: ast.Literal, context: Context) {
         return node.value
     },
 
-    // TemplateLiteral: function*(node: es.TemplateLiteral) {
-    //     // Expressions like `${1}` are not allowed, so no processing needed
-    //     return node.quasis[0].value.cooked
-    // },
+    Identifier: function*(node: ast.Identifier, context: Context) {
+      return getVariable(context, node.name)
+    },
+
+    ExpressionStatement: function*(node: ast.ExpressionStatement, context: Context) {
+      return yield* evaluate(node.expression, context)
+    },
 
     ArrayExpression: function*(node: ast.ArrayExpression, context: Context) {
         throw new Error("Array expressions not supported in x-slang");
@@ -250,11 +255,6 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     // STRETCH GOAL
     // DebuggerStatement: function*(node: es.DebuggerStatement, context: Context) {
     //     yield
-    // },
-
-    // Name: function*(node: ast.Name, context: Context) {
-    //     const environment = currentEnvironment(context)
-    //     return environment.head[node.name]
     // },
 
     UnaryExpression: function*(node: ast.UnaryExpression, context: Context) {
@@ -268,8 +268,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     BinaryExpression: function*(node: ast.BinaryExpression, context: Context) {
-        const left = yield* actualValue(node.left, context)
-        const right = yield* actualValue(node.right, context)
+        const left = yield* evaluate(node.left, context)
+        const right = yield* evaluate(node.right, context)
         const error = rttc.checkBinaryExpression(node, node.operator, left, right)
         if (error) {
             return handleRuntimeError(context, error)
@@ -277,30 +277,44 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         return evaluateBinaryExpression(node.operator, left, right)
     },
 
-    // ConditionalExpression: function*(node: ast.ConditionalExpression, context: Context) {
-    //     const judge = yield* actualValue(node.judge, context)
-    //     const judgeTrue = yield* actualValue(node.judge_true, context)
-    //     const judgeFalse = yield* actualValue(node.judge_false, context)
-    //     const error = rttc.checkConditionalExpression(node, judge, judgeTrue, judgeFalse)
-    //     if (error) {
-    //         return handleRuntimeError(context, error)
-    //     }
-    //     return evaluateConditionalExpression(judge, judgeTrue, judgeFalse)
-    // },
-
-    // // AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
-    // //   const value = yield* actualValue(node.right, context)
-    // //   const symbol = node.left.name
-    // //   assignName(context, symbol, value)
-    // //   return value
-    // },
-
-    WhileStatement: function*(node: ast.WhileStatement, context: Context) {
-      throw new Error("While statements not supported in x-slang");
-      // const condition = yield* actualValue(node.condition.value.element, context)
-      // Need to recursively check whether condition is satisfied HERE
-      // return condition ? evaluate(node.body, context) : null;
+    ConditionalExpression: function*(node: ast.ConditionalExpression, context: Context) {
+        const test = yield* evaluate(node.test, context)
+        const consequent = yield* evaluate(node.consequent, context)
+        const alternate = yield* evaluate(node.alternate, context)
+        const error = rttc.checkConditionalExpression(node, test, consequent, alternate)
+        if (error) {
+            return handleRuntimeError(context, error)
+        }
+        return evaluateConditionalExpression(test, consequent, alternate)
     },
+
+    AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
+      const id = node.left as ast.Identifier
+      const value = yield* evaluate(node.right, context)
+      assignVariable(context, id.name, value)
+      return value
+    },
+
+    // SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
+    //   let expressions 
+    // }
+
+    // WhileStatement: function*(node: ast.WhilePythonStatement, context: Context) {
+    //   let value: any // tslint:disable-line
+    //   while (
+    //     // tslint:disable-next-line
+    //     (yield* actualValue(node.test, context)) &&
+    //     !(value instanceof ReturnValue) &&
+    //     !(value instanceof BreakValue) &&
+    //     !(value instanceof TailCallReturnValue)
+    //   ) {
+    //     value = yield* actualValue(node.body, context)
+    //   }
+    //   if (value instanceof BreakValue) {
+    //     return undefined
+    //   }
+    //   return value
+    // },
 
     ForStatement: function*(node: ast.ForStatement, context: Context) {
       // Create a new block scope for the loop variables
@@ -317,20 +331,44 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     //     throw new Error("Break statements not supported in x-slang");
     // },
 
-    FunctionDeclaration: function*(node: ast.FunctionDeclaration, context: Context) {
-      throw new Error("Function declarations not supported in x-slang");
-
-      // return yield* evaluate(funcDeclToConstDecl, context)
+    FunctionDeclaration: function*(node: ast.FunctionPythonDeclaration, context: Context) {
+      console.log("REACHED HERE!")
+      // const id = node.id as ast.Identifier
+      // // tslint:disable-next-line:no-any
+      // const closure = new Closure(node, currentEnvironment(context), context)
+      // assignVariable(context, id.name, closure)
+      // console.log(util.inspect(context, { showHidden: false, depth: null }))
+      // return undefined
     },
+
+    // ReturnStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
+    //   let returnExpression = node.argument!
+
+    //   // If we have a conditional expression, reduce it until we get something else
+    //   while (
+    //     returnExpression.type === 'LogicalExpression' ||
+    //     returnExpression.type === 'ConditionalExpression'
+    //   ) {
+    //     if (returnExpression.type === 'LogicalExpression') {
+    //       returnExpression = transformLogicalExpression(returnExpression)
+    //     }
+    //     returnExpression = yield* reduceIf(returnExpression, context)
+    //   }
+  
+    //   // If we are now left with a CallExpression, then we use TCO
+    //   if (returnExpression.type === 'CallExpression' && context.variant !== 'lazy') {
+    //     const callee = yield* actualValue(returnExpression.callee, context)
+    //     const args = yield* getArgs(context, returnExpression)
+    //     return new TailCallReturnValue(callee, args, returnExpression)
+    //   } else {
+    //     return new ReturnValue(yield* evaluate(returnExpression, context))
+    //   }
+    // },
 
     // HERE
     CallExpression: function*(node: ast.CallExpression, context: Context) {
       throw new Error("Call expressions not supported in x-slang");
     },
-
-    // BlockStatement: function*(node: ast.BlockStatement, context: Context) {
-    //   throw new Error("Block statements not supported in x-slang");
-    // },
 
     // STRETCH GOAL
     // Not needed in Python 3, because it is a JS only type of expression
@@ -341,15 +379,6 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     // STRETCH GOAL 
     // ArrowFunctionExpression: function*(node: es.ArrowFunctionExpression, context: Context) {
     //     throw new Error("Arrow functions expressions not supported in x-slang");
-    // },
-
-    ExpressionStatement: function*(node: ast.ExpressionStatement, context: Context) {
-        return yield* evaluate(node.expression, context)
-    },
-
-    // ReturnStatement: function*(node: ast.ReturnStatement, context: Context) {
-    //     const returned = yield* actualValue(node.returned, context)
-    //     return returned
     // },
 
 
