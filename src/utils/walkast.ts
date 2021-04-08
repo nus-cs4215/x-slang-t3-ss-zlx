@@ -51,7 +51,7 @@
 
 //       c(stmt, st, "Statement");
 //     }
-//   };  
+//   };
 //   base.Statement = skipThrough;
 //   base.EmptyStatement = ignore;
 //   base.ExpressionStatement = base.ParenthesizedExpression = base.ChainExpression =
@@ -306,7 +306,7 @@
 //     base?: RecursiveVisitors<TState>,
 //     state?: TState
 //   ): void {
-    
+
 //     if (!base) { base = base
 //     ; }(function c(node, st, override) {
 //       var type = override || node.type, found = visitors[type];
@@ -366,4 +366,3 @@
 //   ): Found<TState> | undefined
 
 //   export const findNodeAfter: typeof findNodeAround
-

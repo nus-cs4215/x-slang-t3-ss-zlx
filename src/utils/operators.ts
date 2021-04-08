@@ -121,7 +121,7 @@ export function unaryOp(operator: UnaryOperator, argument: any, line: number, co
 export function evaluateUnaryExpression(operator: UnaryOperator, value: any) {
   // if (operator === 'not') {
   //   return !value
-  // } else 
+  // } else
   if (operator === '-') {
     return -value
   } else {

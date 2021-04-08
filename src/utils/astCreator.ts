@@ -219,7 +219,7 @@ export const assignmentExpression = (
   right: ast.Expression
 ): ast.AssignmentExpression => ({
   type: 'AssignmentExpression',
-  operator: "=",
+  operator: '=',
   left,
   right
 })

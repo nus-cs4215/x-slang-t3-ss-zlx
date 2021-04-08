@@ -101,30 +101,104 @@ interface BaseFunction extends BaseNode {
 export type Function = FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
 
 export type Statement =
-  | ExpressionStatement
-  | BlockStatement
-  | EmptyStatement
+  | ExpressionStatement // use
+  | BlockStatement // use a lot, suite in python
+  | EmptyStatement // use
   | DebuggerStatement
-  | WithStatement
-  | ReturnStatement
+  | WithStatement // use
+  | ReturnStatement // use
   | LabeledStatement
-  | BreakStatement
-  | ContinueStatement
-  | IfStatement
+  | BreakStatement // use
+  | ContinueStatement //use
+  | IfStatement // use
   | SwitchStatement
   | ThrowStatement
-  | TryStatement
-  | WhileStatement
+  | TryStatement // // Did not use it, uses TryPythonStatement instead
+  | WhileStatement // Did not use it, uses WhilePythonStatement instead
   | DoWhileStatement
-  | ForStatement
+  | ForStatement // Did not use it, as the for statement logic in Python is different, use ForPythonStatement instead
   | ForInStatement
   | ForOfStatement
   | Declaration
+  // Newly Added
+  | DeleteStatement
+  | PassStatement
+  | ImportStatement
+  | GlobalStatement
+  | NonlocalStatement
+  | WhilePythonStatement
+  | ForPythonStatement
+  | AssertStatement
+  | TryPythonStatement
+  | RaiseStatement
+  | YieldStatement
 
-interface BaseStatement extends BaseNode {}
+type BaseStatement = BaseNode
 
 export interface EmptyStatement extends BaseStatement {
   type: 'EmptyStatement'
+}
+
+export interface YieldStatement extends BaseStatement {
+  type: 'YieldStatement'
+  expression: Expression
+}
+
+export interface RaiseStatement extends BaseStatement {
+  type: 'RaiseStatement'
+  info: Expression | null
+}
+
+export interface TryPythonStatement extends BaseStatement {
+  type: 'TryPythonStatement'
+  trybody: Statement
+  exceptbody: Statement
+  elsebody: Statement | null
+  finallybody: Statement | null
+}
+
+export interface AssertStatement extends BaseStatement {
+  type: 'AssertStatement'
+  expression: Expression
+}
+
+export interface ForPythonStatement extends BaseStatement {
+  type: 'ForPythonStatement'
+  iter: Expression
+  iterated: Array<Expression>
+  body: Statement
+  else: Statement | null
+}
+
+export interface WhilePythonStatement extends BaseStatement {
+  type: 'WhilePythonStatement'
+  test: Expression
+  body: Statement
+  else: Statement | null
+}
+
+export interface GlobalStatement extends BaseStatement {
+  type: 'GlobalStatement'
+  globallist: Array<Expression>
+}
+
+export interface NonlocalStatement extends BaseStatement {
+  type: 'NonlocalStatement'
+  nonlocallist: Array<Expression>
+}
+
+export interface ImportStatement extends BaseStatement {
+  type: 'ImportStatement'
+  expression: Expression
+}
+
+export interface PassStatement extends BaseStatement {
+  type: 'PassStatement'
+}
+
+export interface DeleteStatement extends BaseStatement {
+  type: 'DeleteStatement'
+  elements: Array<Expression>
 }
 
 export interface BlockStatement extends BaseStatement {
@@ -175,7 +249,7 @@ export interface SwitchStatement extends BaseStatement {
 
 export interface ReturnStatement extends BaseStatement {
   type: 'ReturnStatement'
-  argument?: Expression | null
+  argument?: Array<Expression> | null
 }
 
 export interface ThrowStatement extends BaseStatement {
@@ -224,15 +298,34 @@ export interface DebuggerStatement extends BaseStatement {
   type: 'DebuggerStatement'
 }
 
-export type Declaration = FunctionDeclaration | VariableDeclaration | ClassDeclaration
+export type Declaration =
+  | FunctionDeclaration
+  | VariableDeclaration
+  | ClassDeclaration
+  | FunctionPythonDeclaration
+  | ClassPythonDeclaration
 
-interface BaseDeclaration extends BaseStatement {}
+type BaseDeclaration = BaseStatement
 
 export interface FunctionDeclaration extends BaseFunction, BaseDeclaration {
   type: 'FunctionDeclaration'
   /** It is null when a function declaration is a part of the `export default function` statement */
   id: Identifier | null
   body: BlockStatement
+}
+
+export interface ClassPythonDeclaration extends BaseDeclaration {
+  type: 'ClassPythonDeclaration'
+  id: Identifier
+  arglist: Array<Expression>
+  body: Statement
+}
+
+export interface FunctionPythonDeclaration extends BaseDeclaration {
+  type: 'FunctionPythonDeclaration'
+  id: Identifier
+  parameters: Expression
+  body: Statement
 }
 
 export interface VariableDeclaration extends BaseDeclaration {
@@ -249,34 +342,133 @@ export interface VariableDeclarator extends BaseNode {
 
 export type Expression =
   | ThisExpression
-  | ArrayExpression
+  | ArrayExpression // List
   | ObjectExpression
   | FunctionExpression
   | ArrowFunctionExpression
-  | YieldExpression
-  | Literal
-  | UnaryExpression
+  | YieldExpression // use
+  | Literal // use
+  | UnaryExpression // use
   | UpdateExpression
-  | BinaryExpression
-  | AssignmentExpression
+  | BinaryExpression // use
+  | AssignmentExpression // Use
   | LogicalExpression
   | MemberExpression
-  | ConditionalExpression
+  | ConditionalExpression // use
   | CallExpression
   | NewExpression
-  | SequenceExpression
+  | SequenceExpression // Tuple
   | TemplateLiteral
   | TaggedTemplateExpression
   | ClassExpression
   | MetaProperty
   | Identifier
   | AwaitExpression
-  | ImportExpression
+  | ImportExpression // Not used, the properties are not complete, using ImportFromExpression instead
   | ChainExpression
+  // Newly added
+  | DictExpression // Dict
+  | TrailerExpression
+  | ArgListExpression
+  | SubscriptListExpression
+  | ImportFromExpression
+  | TestListStarExpression
+  | SubscriptExpression
+  | ParameterExpression
+  | TypedargslistExpression // used in typearglist and varargslist
+  | ArgumentExpression
+  | SetExpression
+  | KeyValueExpression
+  | ImportedElementExpression
+  | WithItemExpression
+  | LambdaDefExpression
 
-export interface BaseExpression extends BaseNode {}
+export type BaseExpression = BaseNode
 
 type ChainElement = SimpleCallExpression | MemberExpression
+
+export interface LambdaDefExpression extends BaseExpression {
+  type: 'LambdaDefExpression'
+  arguments: Array<Expression> | null
+  body: Expression
+}
+
+export interface WithItemExpression extends BaseExpression {
+  type: 'WithItemExpression'
+  object: Expression
+  alias: Expression | null
+}
+
+export interface KeyValueExpression extends BaseExpression {
+  type: 'KeyValueExpression'
+  key: Expression
+  value: Expression
+}
+
+export interface SetExpression extends BaseExpression {
+  type: 'SetExpression'
+  elements: Array<Expression>
+}
+
+export interface ArgumentExpression extends BaseExpression {
+  type: 'ArgumentExpression'
+  key: Expression | null
+  value: Expression
+}
+
+export interface TypedargslistExpression extends BaseExpression {
+  type: 'TypedargslistExpression'
+  name: Expression
+  default: Expression | null
+}
+
+export interface ParameterExpression extends BaseExpression {
+  type: 'ParameterExpression'
+  expressions: Array<Expression>
+}
+
+export interface SubscriptExpression extends BaseExpression {
+  type: 'SubscriptExpression'
+  start: Expression | null
+  end: Expression | null
+  sep: Expression | null
+}
+
+export interface TestListStarExpression extends BaseExpression {
+  type: 'TestListStarExpression'
+  expressions: Array<Expression>
+}
+
+export interface ImportFromExpression extends BaseExpression {
+  type: 'ImportFromExpression'
+  from: Expression | null
+  imported: Array<Expression>
+}
+
+export interface ImportedElementExpression extends BaseExpression {
+  type: 'ImportedElementExpression'
+  name: Expression
+  alias: Expression | null
+}
+
+export interface SubscriptListExpression extends BaseExpression {
+  type: 'SubscriptListExpression'
+  body: Array<Expression>
+}
+export interface ArgListExpression extends BaseExpression {
+  type: 'ArgListExpression'
+  body: Array<Expression>
+}
+
+export interface TrailerExpression extends BaseExpression {
+  type: 'TrailerExpression'
+  base: Expression
+  trailer: Array<Expression>
+}
+export interface DictExpression extends BaseExpression {
+  type: 'DictExpression'
+  elements: Array<Expression>
+}
 
 export interface ChainExpression extends BaseExpression {
   type: 'ChainExpression'
@@ -335,7 +527,7 @@ export interface BinaryExpression extends BaseExpression {
 export interface AssignmentExpression extends BaseExpression {
   type: 'AssignmentExpression'
   operator: AssignmentOperator
-  left: Pattern | MemberExpression
+  left: Pattern | MemberExpression | Expression
   right: Expression
 }
 
@@ -391,7 +583,7 @@ export type Pattern =
   | AssignmentPattern
   | MemberExpression
 
-interface BasePattern extends BaseNode {}
+type BasePattern = BaseNode
 
 export interface SwitchCase extends BaseNode {
   type: 'SwitchCase'
@@ -477,6 +669,7 @@ export type AssignmentOperator =
   | '|='
   | '^='
   | '&='
+  | '//='
 
 export type UpdateOperator = '++' | '--'
 
@@ -502,7 +695,7 @@ export interface ArrowFunctionExpression extends BaseExpression, BaseFunction {
 
 export interface YieldExpression extends BaseExpression {
   type: 'YieldExpression'
-  argument?: Expression | null
+  argument?: Array<Expression> | null
   delegate: boolean
 }
 
@@ -596,7 +789,7 @@ export type ModuleDeclaration =
   | ExportNamedDeclaration
   | ExportDefaultDeclaration
   | ExportAllDeclaration
-interface BaseModuleDeclaration extends BaseNode {}
+type BaseModuleDeclaration = BaseNode
 
 export type ModuleSpecifier =
   | ImportSpecifier
