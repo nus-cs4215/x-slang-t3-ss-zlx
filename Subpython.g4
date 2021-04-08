@@ -363,7 +363,6 @@ compound_stmt
  | with_stmt
  | funcdef
  | classdef
- | decorated
  ;
 
 /// if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
@@ -617,20 +616,20 @@ argument
  ;
 
 /// comp_iter: comp_for | comp_if
-comp_iter
- : comp_for
- | comp_if
- ;
+// comp_iter
+//  : comp_for
+//  | comp_if
+//  ;
 
-/// comp_for: 'for' exprlist 'in' or_test [comp_iter]
-comp_for
- : FOR exprlist IN or_test comp_iter?
- ;
+// /// comp_for: 'for' exprlist 'in' or_test [comp_iter]
+// comp_for
+//  : FOR exprlist IN or_test comp_iter?
+//  ;
 
-/// comp_if: 'if' test_nocond [comp_iter]
-comp_if
- : IF test_nocond comp_iter?
- ;
+// /// comp_if: 'if' test_nocond [comp_iter]
+// comp_if
+//  : IF test_nocond comp_iter?
+//  ;
 
 /// yield_expr: 'yield' [testlist]
 yield_expr

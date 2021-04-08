@@ -220,8 +220,8 @@ class PythonStatementGenerator
     return (undefined as unknown) as ast.Statement
   }
   visitSimple_stmt(tree: Simple_stmtContext): ast.Statement {
-    let stmts = []
-    for (var i = 0; i < tree.small_stmt().length; i++) {
+    const stmts = []
+    for (let i = 0; i < tree.small_stmt().length; i++) {
       stmts.push(this.visit(tree.small_stmt(i)))
     }
     return { type: 'BlockStatement', body: stmts }
@@ -480,8 +480,8 @@ class PythonStatementGenerator
   // Visit a parse tree produced by Python3Parser#try_stmt.
   visitTry_stmt(ctx: Try_stmtContext): ast.Statement {
     console.log('visitTry_stmt')
-    let trybody = this.visit(ctx.getChild(2))
-    let exceptbody = this.visit(ctx.getChild(5))
+    const trybody = this.visit(ctx.getChild(2))
+    const exceptbody = this.visit(ctx.getChild(5))
     let elsebody = null
     let finallybody = null
     for (let i = 0; i < ctx.childCount; i++) {
@@ -1720,7 +1720,7 @@ class PythonExpressionListGenerator
   // Visit a parse tree produced by Python3Parser#yield_arg.
   visitYield_arg(ctx: Yield_argContext): ast.Expression[] {
     console.log('visitYield_arg')
-    let result = new Array<ast.Expression>()
+    const result = new Array<ast.Expression>()
     const generator = new PythonExpressionGenerator()
     if (ctx.FROM() !== undefined) {
       result.push(generator.visit(ctx.test()!))
