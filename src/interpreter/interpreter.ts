@@ -56,6 +56,7 @@ function* forceIt(val: any, context: Context): Value {
 export function* actualValue(exp: ast.Node, context: Context): Value {
   const evalResult = yield* evaluate(exp, context)
   const forced = yield* forceIt(evalResult, context)
+  console.log(forced)
   return forced
 }
 
@@ -322,6 +323,11 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       //   return undefined
       // }
       return value
+    },
+
+    DictExpression: function*(node: ast.DictExpression, context: Context){
+      console.log("in dict")
+      return 12345
     },
 
     ForStatement: function*(node: ast.ForStatement, context: Context) {

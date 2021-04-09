@@ -323,6 +323,11 @@ export const variableDeclarator = (
   loc
 })
 
+export const DictExpression = (elements: Array<ast.Expression>): ast.DictExpression => ({
+  type: 'DictExpression',
+  elements
+})
+
 export const ifStatement = (
   test: ast.Expression,
   consequent: ast.BlockStatement,
