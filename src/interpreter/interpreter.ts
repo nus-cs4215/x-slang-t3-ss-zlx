@@ -1,5 +1,5 @@
 /* tslint:disable:max-classes-per-file */
-const util = require('util')
+// const util = require('util')
 import * as ast from '../parser/ast'
 // import * as es from 'estree'
 import * as constants from '../constants'
@@ -104,7 +104,7 @@ const handleRuntimeError = (context: Context, error: RuntimeSourceError): never 
 
 function getVariable(context: Context, name: string) {
   let environment: Environment | null = context.runtime.environments[0]
-  while(environment) {
+  while (environment) {
     if (environment.head.hasOwnProperty(name)) {
       return environment.head[name]
     } else {
@@ -115,7 +115,7 @@ function getVariable(context: Context, name: string) {
 }
 
 function assignVariable(context: Context, name: string, value: Value) {
-  let environment: Environment | null = context.runtime.environments[0]
+  const environment: Environment | null = context.runtime.environments[0]
   environment.head[name] = value
   return undefined
 }
@@ -248,6 +248,15 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       return yield* evaluate(node.expression, context)
     },
 
+    SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
+      console.log("Reached Sequence Expression:")
+      for (let i = 0; i < node.expressions.length -1; i++) {
+        yield * evaluate(node.expressions[i], context)
+      }
+      console.log("SEQ EVAL")
+      return yield * evaluate(node.expressions[node.expressions.length - 1], context)
+    },
+
     ArrayExpression: function*(node: ast.ArrayExpression, context: Context) {
         throw new Error("Array expressions not supported in x-slang");
     },
@@ -295,26 +304,25 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       return value
     },
 
-    // SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
-    //   let expressions 
-    // }
-
-    // WhileStatement: function*(node: ast.WhilePythonStatement, context: Context) {
-    //   let value: any // tslint:disable-line
-    //   while (
-    //     // tslint:disable-next-line
-    //     (yield* actualValue(node.test, context)) &&
-    //     !(value instanceof ReturnValue) &&
-    //     !(value instanceof BreakValue) &&
-    //     !(value instanceof TailCallReturnValue)
-    //   ) {
-    //     value = yield* actualValue(node.body, context)
-    //   }
-    //   if (value instanceof BreakValue) {
-    //     return undefined
-    //   }
-    //   return value
-    // },
+    WhileStatement: function*(node: ast.WhilePythonStatement, context: Context) {
+      let value: any // tslint:disable-line
+      console.log("Reached While Loop!")
+      while (
+        // tslint:disable-next-line
+        (yield* actualValue(node.test, context)) 
+        // &&
+        // !(value instanceof ReturnValue) &&
+        // !(value instanceof BreakValue) &&
+        // !(value instanceof TailCallReturnValue)
+      ) {
+        value = yield* actualValue(node.body, context)
+        console.log(value)
+      }
+      // if (value instanceof BreakValue) {
+      //   return undefined
+      // }
+      return value
+    },
 
     ForStatement: function*(node: ast.ForStatement, context: Context) {
       // Create a new block scope for the loop variables
