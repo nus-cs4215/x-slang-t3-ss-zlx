@@ -1,7 +1,6 @@
 /* tslint:disable:max-classes-per-file */
-// const util = require('util')
+const util = require('util')
 import * as ast from '../parser/ast'
-// import * as es from 'estree'
 import * as constants from '../constants'
 import * as errors from '../errors/errors'
 import { RuntimeSourceError } from '../errors/runtimeSourceError'
@@ -11,7 +10,6 @@ import { primitive } from '../utils/astCreator'
 import {
   evaluateBinaryExpression,
   evaluateConditionalExpression,
-  // evaluateConditionalExpression,
   evaluateUnaryExpression
 } from '../utils/operators'
 import * as rttc from '../utils/rttc'
@@ -76,10 +74,12 @@ const createEnvironment = (
       arguments: args.map(primitive)
     }
   }
+  if (closure.node.type !== 'FunctionPythonDeclaration') {
   closure.node.params.forEach((param, index) => {
     const ident = param as ast.Identifier
     environment.head[ident.name] = args[index]
   })
+  }
   return environment
 }
 
@@ -180,7 +180,7 @@ const checkNumberOfArguments = (
   exp: ast.CallExpression
 ) => {
   if (callee instanceof Closure) {
-    if (callee.node.params.length !== args.length) {
+    if (callee.node.type !== 'FunctionPythonDeclaration' && callee.node.params.length !== args.length) {
       return handleRuntimeError(
         context,
         new errors.InvalidNumberOfArguments(exp, callee.node.params.length, args.length)
@@ -250,12 +250,15 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
-      console.log("Reached Sequence Expression:")
-      for (let i = 0; i < node.expressions.length -1; i++) {
-        yield * evaluate(node.expressions[i], context)
+      let length = node.expressions.length
+      if (length > 1){
+        for (let i = 0; i < length -1; i++) {
+          yield * evaluate(node.expressions[i], context)
+        }
+        return yield * evaluate(node.expressions[node.expressions.length - 1], context)
+      } else {
+        return yield * evaluate(node.expressions[0], context)
       }
-      console.log("SEQ EVAL")
-      return yield * evaluate(node.expressions[node.expressions.length - 1], context)
     },
 
     ArrayExpression: function*(node: ast.ArrayExpression, context: Context) {
@@ -310,18 +313,15 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       console.log("Reached While Loop!")
       while (
         // tslint:disable-next-line
-        (yield* actualValue(node.test, context)) 
-        // &&
-        // !(value instanceof ReturnValue) &&
-        // !(value instanceof BreakValue) &&
-        // !(value instanceof TailCallReturnValue)
+        yield* actualValue(node.test, context)
+        &&
+        !(value instanceof ReturnValue) &&
+        !(value instanceof BreakValue) &&
+        !(value instanceof TailCallReturnValue)
       ) {
         value = yield* actualValue(node.body, context)
         console.log(value)
       }
-      // if (value instanceof BreakValue) {
-      //   return undefined
-      // }
       return value
     },
 
@@ -346,38 +346,25 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     // },
 
     FunctionDeclaration: function*(node: ast.FunctionPythonDeclaration, context: Context) {
-      console.log("REACHED HERE!")
-      // const id = node.id as ast.Identifier
-      // // tslint:disable-next-line:no-any
-      // const closure = new Closure(node, currentEnvironment(context), context)
-      // assignVariable(context, id.name, closure)
-      // console.log(util.inspect(context, { showHidden: false, depth: null }))
-      // return undefined
+      console.log("Function")
+      const id = node.id as ast.Identifier
+      // tslint:disable-next-line:no-any
+      const closure = new Closure(node, currentEnvironment(context), context)
+      assignVariable(context, id.name, closure)
+      console.log(util.inspect(context, { showHidden: false, depth: null }))
+      return undefined
     },
 
-    // ReturnStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
-    //   let returnExpression = node.argument!
-
-    //   // If we have a conditional expression, reduce it until we get something else
-    //   while (
-    //     returnExpression.type === 'LogicalExpression' ||
-    //     returnExpression.type === 'ConditionalExpression'
-    //   ) {
-    //     if (returnExpression.type === 'LogicalExpression') {
-    //       returnExpression = transformLogicalExpression(returnExpression)
-    //     }
-    //     returnExpression = yield* reduceIf(returnExpression, context)
-    //   }
-  
-    //   // If we are now left with a CallExpression, then we use TCO
-    //   if (returnExpression.type === 'CallExpression' && context.variant !== 'lazy') {
-    //     const callee = yield* actualValue(returnExpression.callee, context)
-    //     const args = yield* getArgs(context, returnExpression)
-    //     return new TailCallReturnValue(callee, args, returnExpression)
-    //   } else {
-    //     return new ReturnValue(yield* evaluate(returnExpression, context))
-    //   }
-    // },
+    ReturnStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
+      let returnExpression = node.argument!
+      // let nreturnExpression = returnExpression[0]
+      // // If we have a conditional expression, reduce it until we get something else
+      // while (nreturnExpression.type === 'ConditionalExpression') {
+      //   nreturnExpression = yield* evaluate(nreturnExpression, context)
+      // }
+      console.log("Return")
+      return new ReturnValue(yield* evaluate(returnExpression[0], context))
+    },
 
     // HERE
     CallExpression: function*(node: ast.CallExpression, context: Context) {
@@ -422,6 +409,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         const environment = createBlockEnvironment(context, 'programEnvironment')
         pushEnvironment(context, environment)
         const result = yield* forceIt(yield* evaluateBlockSatement(context, node), context);
+        console.log("Program")
         return result;
     }
 }

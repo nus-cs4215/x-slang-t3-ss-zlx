@@ -351,3 +351,15 @@ export const whileStatement = (
   body,
   loc
 })
+
+export const whilePythonStatement = (
+  body: ast.BlockStatement,
+  test: ast.Expression,
+  loc?: ast.SourceLocation | null
+): ast.WhilePythonStatement => ({
+  type: 'WhilePythonStatement',
+  test,
+  body,
+  else: null,
+  loc
+})

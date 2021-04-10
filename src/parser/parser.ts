@@ -452,7 +452,7 @@ class PythonStatementGenerator
     return {
       type: 'FunctionPythonDeclaration',
       id: { type: 'Identifier', name: ctx.NAME().text },
-      parameters: generator.visit(ctx.parameters()),
+      params: generator.visit(ctx.parameters()),
       body: this.visit(ctx.suite())
     }
   }

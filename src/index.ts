@@ -237,25 +237,25 @@ export async function runInContext(
   if (!program) {
     return resolvedErrorPromise
   }
-  console.log('====After Parse:')
-  console.log(program)
+  // console.log('====After Parse:')
+  // console.log(program)
   // validateAndAnnotate(program as Program, context)
-  console.log('====After Validate:')
-  console.log(program)
+  // console.log('====After Validate:')
+  // console.log(program)
   // typeCheck(program, context)
   // if (context.errors.length > 0) {
   //   return resolvedErrorPromise
   // }
-  console.log('====After Type Check:')
-  console.log(program)
+  // console.log('====After Type Check:')
+  // console.log(program)
   if (context.prelude !== null) {
     const prelude = context.prelude
     context.prelude = null
     await runInContext(prelude, context, { ...options, isPrelude: true })
     return runInContext(code, context, options)
   }
-  console.log('====After Prelude Stuff:')
-  console.log(program)
+  // console.log('====After Prelude Stuff:')
+  // console.log(program)
   const it = evaluate(program, context)
   const scheduler: Scheduler = new PreemptiveScheduler(theOptions.steps)
   return scheduler.run(it, context)

@@ -98,7 +98,7 @@ interface BaseFunction extends BaseNode {
   body: BlockStatement | Expression
 }
 
-export type Function = FunctionDeclaration | FunctionExpression | ArrowFunctionExpression
+export type Function = FunctionDeclaration | FunctionExpression | ArrowFunctionExpression | FunctionPythonDeclaration
 
 export type Statement =
   | ExpressionStatement // use
@@ -330,7 +330,7 @@ export interface ClassPythonDeclaration extends BaseDeclaration {
 export interface FunctionPythonDeclaration extends BaseDeclaration {
   type: 'FunctionPythonDeclaration'
   id: Identifier
-  parameters: Expression
+  params: Expression
   body: Statement
 }
 
