@@ -226,11 +226,11 @@ export const arrayExpression = (elements: ast.Expression[]): ast.ArrayExpression
 export const subscriptListExpression = (
   body: ast.Expression[],
   loc: ast.SourceLocation | null
-  ): ast.SubscriptListExpression => ({
-    type: 'SubscriptListExpression',
-    body,
-    loc
-  })
+): ast.SubscriptListExpression => ({
+  type: 'SubscriptListExpression',
+  body,
+  loc
+})
 
 export const assignmentExpression = (
   left: ast.Identifier,
@@ -404,9 +404,20 @@ export const variableDeclarator = (
   loc
 })
 
-export const DictExpression = (elements: Array<ast.Expression>): ast.DictExpression => ({
+export const DictExpression = (elements: ast.Expression[]): ast.DictExpression => ({
   type: 'DictExpression',
   elements
+})
+
+export const KeyValueExpression = (
+  key: ast.Expression,
+  value: ast.Expression,
+  loc?: ast.SourceLocation | null
+): ast.KeyValueExpression => ({
+  type: 'KeyValueExpression',
+  key,
+  value,
+  loc
 })
 
 export const ifStatement = (

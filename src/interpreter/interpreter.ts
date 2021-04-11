@@ -267,8 +267,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     ArrayExpression: function*(node: ast.ArrayExpression, context: Context) {
-        let elements = node.elements
-        let returnArr = []
+        const elements = node.elements
+        const returnArr = []
         for(let i = 0; i < elements.length; i++){
           returnArr.push(yield * evaluate(elements[i], context))
         }
@@ -333,9 +333,20 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       return value
     },
 
+    KeyValueExpression: function*(node: ast.KeyValueExpression, context: Context){
+      let key = yield * evaluate(node.key, context)
+      let val = yield * evaluate(node.value, context)
+      return [key, val]
+    },
+
     DictExpression: function*(node: ast.DictExpression, context: Context){
-      console.log("in dict")
-      return 12345
+      let elements = node.elements
+      let returnDict = {}
+      for(let i=0; i < elements.length; i++){
+        let keyValue = yield * evaluate(elements[i], context)
+        returnDict[keyValue[0]] = keyValue[1]
+      }
+      return returnDict
     },
 
     ForPythonStatement: function*(node: ast.ForPythonStatement, context: Context) {
