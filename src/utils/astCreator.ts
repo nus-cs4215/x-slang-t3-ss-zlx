@@ -223,6 +223,15 @@ export const arrayExpression = (elements: ast.Expression[]): ast.ArrayExpression
   elements
 })
 
+export const subscriptListExpression = (
+  body: ast.Expression[],
+  loc: ast.SourceLocation | null
+  ): ast.SubscriptListExpression => ({
+    type: 'SubscriptListExpression',
+    body,
+    loc
+  })
+
 export const assignmentExpression = (
   left: ast.Identifier,
   right: ast.Expression

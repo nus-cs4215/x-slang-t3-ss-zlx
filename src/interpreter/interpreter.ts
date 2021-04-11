@@ -1,5 +1,5 @@
 /* tslint:disable:max-classes-per-file */
-const util = require('util')
+// const util = require('util')
 import * as ast from '../parser/ast'
 import * as constants from '../constants'
 import * as errors from '../errors/errors'
@@ -256,7 +256,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
       const length = node.expressions.length
       if (length > 1){
-        let returnArray = []
+        const returnArray = []
         for (let i = 0; i < length -1; i++) {
           returnArray.push(yield * evaluate(node.expressions[i], context))
         }
@@ -267,7 +267,16 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     ArrayExpression: function*(node: ast.ArrayExpression, context: Context) {
-        throw new Error("Array expressions not supported in x-slang");
+        let elements = node.elements
+        let returnArr = []
+        for(let i = 0; i < elements.length; i++){
+          returnArr.push(yield * evaluate(elements[i], context))
+        }
+        return returnArr 
+    },
+
+    SubscriptListExpression: function*(node: ast.SubscriptListExpression, context: Context) {
+      return yield * evaluate(node.body[0], context)
     },
 
     // STRETCH GOAL
@@ -329,7 +338,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       return 12345
     },
 
-    ForStatement: function*(node: ast.ForStatement, context: Context) {
+    ForPythonStatement: function*(node: ast.ForPythonStatement, context: Context) {
       // Create a new block scope for the loop variables
       throw new Error("For statements not supported in x-slang");
     },
@@ -355,8 +364,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     ParameterExpression: function*(node: ast.ParameterExpression, context: Context) {
-      let expressions = node.expressions
-      let returnArray = []
+      const expressions = node.expressions
+      const returnArray = []
       for (let i=0; i < expressions.length -1; i++){
         returnArray.push(yield * evaluate(expressions[i], context))
       }
@@ -368,8 +377,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     ArgListExpression: function*(node: ast.ArgListExpression, context: Context) {
-      let body = node.body
-      let returnArray = []
+      const body = node.body
+      const returnArray = []
       for(let i=0; i < body.length -1; i++){
         returnArray.push(yield * evaluate(body[i], context))
       }
@@ -381,15 +390,22 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     TrailerExpression: function*(node: ast.TrailerExpression, context: Context) {
       const base = node.base as ast.Identifier
-      const funcEnv = getVariable(context, base.name)
-      // const funcParams = yield * evaluate(node.trailer[0], context)
-      const funcArgs = yield * evaluate(node.trailer[0], context)
-      console.log("Environment:")
-      console.log(util.inspect(funcEnv, { showHidden: false, depth: null }))
-      console.log("Params:")
-      // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
-      console.log("Args:")
-      console.log(util.inspect(funcArgs, { showHidden: false, depth: null }))
+      const type = node.trailer[0].type
+      const trailer = yield * evaluate(node.trailer[0], context)
+      if (type === "SubscriptListExpression") {
+        const arr = getVariable(context, base.name)
+        return arr[trailer]
+      }
+      // Function Call Specific!
+      // const funcEnv = getVariable(context, base.name)
+      // // const funcParams = yield * evaluate(node.trailer[0], context)
+      // const funcArgs = yield * evaluate(node.trailer[0], context)
+      // console.log("Environment:")
+      // console.log(util.inspect(funcEnv, { showHidden: false, depth: null }))
+      // console.log("Params:")
+      // // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
+      // console.log("Args:")
+      // console.log(util.inspect(funcArgs, { showHidden: false, depth: null }))
     },
 
     ReturnPythonStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
