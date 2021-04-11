@@ -98,7 +98,11 @@ interface BaseFunction extends BaseNode {
   body: BlockStatement | Expression
 }
 
-export type Function = FunctionDeclaration | FunctionExpression | ArrowFunctionExpression | FunctionPythonDeclaration
+export type Function =
+  | FunctionDeclaration
+  | FunctionExpression
+  | ArrowFunctionExpression
+  | FunctionPythonDeclaration
 
 export type Statement =
   | ExpressionStatement // use

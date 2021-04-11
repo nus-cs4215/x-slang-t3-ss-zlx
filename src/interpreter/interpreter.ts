@@ -75,10 +75,10 @@ const createEnvironment = (
     }
   }
   if (closure.node.type !== 'FunctionPythonDeclaration') {
-  closure.node.params.forEach((param, index) => {
-    const ident = param as ast.Identifier
-    environment.head[ident.name] = args[index]
-  })
+    closure.node.params.forEach((param, index) => {
+      const ident = param as ast.Identifier
+      environment.head[ident.name] = args[index]
+    })
   }
   return environment
 }
@@ -180,7 +180,10 @@ const checkNumberOfArguments = (
   exp: ast.CallExpression
 ) => {
   if (callee instanceof Closure) {
-    if (callee.node.type !== 'FunctionPythonDeclaration' && callee.node.params.length !== args.length) {
+    if (
+      callee.node.type !== 'FunctionPythonDeclaration' &&
+      callee.node.params.length !== args.length
+    ) {
       return handleRuntimeError(
         context,
         new errors.InvalidNumberOfArguments(exp, callee.node.params.length, args.length)
@@ -250,12 +253,13 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
-      let length = node.expressions.length
+      const length = node.expressions.length
       if (length > 1){
+        let returnArray = []
         for (let i = 0; i < length -1; i++) {
-          yield * evaluate(node.expressions[i], context)
+          returnArray.push(yield * evaluate(node.expressions[i], context))
         }
-        return yield * evaluate(node.expressions[node.expressions.length - 1], context)
+        return returnArray
       } else {
         return yield * evaluate(node.expressions[0], context)
       }
@@ -308,19 +312,13 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       return value
     },
 
-    WhileStatement: function*(node: ast.WhilePythonStatement, context: Context) {
+    WhilePythonStatement: function*(node: ast.WhilePythonStatement, context: Context) {
       let value: any // tslint:disable-line
-      console.log("Reached While Loop!")
       while (
         // tslint:disable-next-line
-        yield* actualValue(node.test, context)
-        &&
-        !(value instanceof ReturnValue) &&
-        !(value instanceof BreakValue) &&
-        !(value instanceof TailCallReturnValue)
+        yield* evaluate(node.test, context)
       ) {
-        value = yield* actualValue(node.body, context)
-        console.log(value)
+        value = yield* evaluate(node.body, context)
       }
       return value
     },
@@ -345,7 +343,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     //     throw new Error("Break statements not supported in x-slang");
     // },
 
-    FunctionDeclaration: function*(node: ast.FunctionPythonDeclaration, context: Context) {
+    FunctionPythonDeclaration: function*(node: ast.FunctionPythonDeclaration, context: Context) {
       console.log("Function")
       const id = node.id as ast.Identifier
       // tslint:disable-next-line:no-any
@@ -355,8 +353,23 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       return undefined
     },
 
+    ParameterExpression: function*(node: ast.ParameterExpression, context: Context) {
+      let expressions = node.expressions
+      let returnArray = []
+      for (let i=0; i < expressions.length -1; i++){
+        returnArray.push(yield * evaluate(expressions[i], context))
+      }
+      return returnArray
+    },
+
+    TrailerExpression: function*(node: ast.TrailerExpression, context: Context) {
+      const base = node.base as ast.Identifier
+      const funcEnv = getVariable(context, base.name)
+      console.log(util.inspect(funcEnv, { showHidden: false, depth: null }))
+    },
+
     ReturnStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
-      let returnExpression = node.argument!
+      const returnExpression = node.argument!
       // let nreturnExpression = returnExpression[0]
       // // If we have a conditional expression, reduce it until we get something else
       // while (nreturnExpression.type === 'ConditionalExpression') {

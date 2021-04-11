@@ -93,13 +93,13 @@ export default class Closure extends Callable {
     } else if (this.node.type === 'FunctionPythonDeclaration' && this.node.id != null) {
       this.functionName = this.node.id.name
     } else {
-        if (this.node.type !== 'FunctionPythonDeclaration'){
+      if (this.node.type !== 'FunctionPythonDeclaration') {
         this.functionName =
           (this.node.params.length === 1 ? '' : '(') +
           this.node.params.map((o: ast.Identifier) => o.name).join(', ') +
           (this.node.params.length === 1 ? '' : ')') +
           ' => ...'
-        }
+      }
     }
     // TODO: Investigate how relevant this really is.
     // .fun seems to only be used in interpreter's NewExpression handler, which uses .fun.prototype.

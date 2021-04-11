@@ -280,6 +280,19 @@ export const functionDeclaration = (
   loc
 })
 
+export const functionPythonDeclaration = (
+  id: ast.Identifier,
+  params: ast.Expression,
+  body: ast.Statement,
+  loc?: ast.SourceLocation | null
+): ast.FunctionPythonDeclaration => ({
+  type: 'FunctionPythonDeclaration',
+  id,
+  params,
+  body,
+  loc
+})
+
 export const blockExpression = (
   body: ast.Statement[],
   loc?: ast.SourceLocation | null
