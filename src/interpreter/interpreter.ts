@@ -75,10 +75,10 @@ const createEnvironment = (
     }
   }
   if (closure.node.type !== 'FunctionPythonDeclaration') {
-  closure.node.params.forEach((param, index) => {
-    const ident = param as ast.Identifier
-    environment.head[ident.name] = args[index]
-  })
+    closure.node.params.forEach((param, index) => {
+      const ident = param as ast.Identifier
+      environment.head[ident.name] = args[index]
+    })
   }
   return environment
 }
@@ -180,7 +180,10 @@ const checkNumberOfArguments = (
   exp: ast.CallExpression
 ) => {
   if (callee instanceof Closure) {
-    if (callee.node.type !== 'FunctionPythonDeclaration' && callee.node.params.length !== args.length) {
+    if (
+      callee.node.type !== 'FunctionPythonDeclaration' &&
+      callee.node.params.length !== args.length
+    ) {
       return handleRuntimeError(
         context,
         new errors.InvalidNumberOfArguments(exp, callee.node.params.length, args.length)
@@ -308,7 +311,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       return value
     },
 
-    WhileStatement: function*(node: ast.WhilePythonStatement, context: Context) {
+    WhilePythonStatement: function*(node: ast.WhilePythonStatement, context: Context) {
       let value: any // tslint:disable-line
       console.log("Reached While Loop!")
       while (

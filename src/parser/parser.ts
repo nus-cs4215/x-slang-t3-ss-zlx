@@ -402,14 +402,14 @@ class PythonStatementGenerator
         type: 'WhilePythonStatement',
         test: generator.visit(ctx.test()),
         body: this.visit(ctx.suite(0)),
-        else: this.visit(ctx.suite(1))
+        els: this.visit(ctx.suite(1))
       }
     } else {
       return {
         type: 'WhilePythonStatement',
         test: generator.visit(ctx.test()),
         body: this.visit(ctx.suite(0)),
-        else: null
+        els: null
       }
     }
   }
@@ -425,7 +425,7 @@ class PythonStatementGenerator
         iter: generator.visit(ctx.exprlist()), // This is PEGenerator's exprlist, not in PELGenerator's. So it haven't been implemented.
         iterated: listgenerator.visit(ctx.testlist()), //
         body: this.visit(ctx.suite(0)),
-        else: this.visit(ctx.suite(1))
+        els: this.visit(ctx.suite(1))
       }
     } else {
       return {
@@ -433,7 +433,7 @@ class PythonStatementGenerator
         iter: generator.visit(ctx.exprlist()),
         iterated: listgenerator.visit(ctx.testlist()),
         body: this.visit(ctx.suite(0)),
-        else: null
+        els: null
       }
     }
   }
