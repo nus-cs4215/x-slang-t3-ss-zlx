@@ -334,16 +334,16 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     KeyValueExpression: function*(node: ast.KeyValueExpression, context: Context){
-      let key = yield * evaluate(node.key, context)
-      let val = yield * evaluate(node.value, context)
+      const key = yield * evaluate(node.key, context)
+      const val = yield * evaluate(node.value, context)
       return [key, val]
     },
 
     DictExpression: function*(node: ast.DictExpression, context: Context){
-      let elements = node.elements
-      let returnDict = {}
+      const elements = node.elements
+      const returnDict = {}
       for(let i=0; i < elements.length; i++){
-        let keyValue = yield * evaluate(elements[i], context)
+        const keyValue = yield * evaluate(elements[i], context)
         returnDict[keyValue[0]] = keyValue[1]
       }
       return returnDict
@@ -351,7 +351,9 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     ForPythonStatement: function*(node: ast.ForPythonStatement, context: Context) {
       // Create a new block scope for the loop variables
-      throw new Error("For statements not supported in x-slang");
+      // let iter = (node.iter as ast.Identifier).name
+      // let iterated = getVariable(context, (node.iterated[0] as ast.Identifier).name)
+      return "For Loop"
     },
 
     // STRETCH GOAL

@@ -456,3 +456,18 @@ export const whilePythonStatement = (
   els,
   loc
 })
+
+export const forPythonStatement = (
+  iter: ast.Expression,
+  iterated: ast.Expression[],
+  body: ast.Statement,
+  els: ast.Statement | null,
+  loc?: ast.SourceLocation | null
+): ast.ForPythonStatement => ({
+  type: 'ForPythonStatement',
+  iter,
+  iterated,
+  body,
+  els,
+  loc
+})

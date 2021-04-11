@@ -9,9 +9,15 @@
 
 # a = arr[2]
 
-dictionary = {
-    "hi": "hello",
-    "bye": "goodbye"
-}
+# dictionary = {
+#     "hi": "hello",
+#     "bye": "goodbye"
+# }
 
-dictionary["bye"]
+# dictionary["bye"]
+a = 5
+b = 0
+while(a > 0):
+    b = b + a
+    a = a - 1
+b
