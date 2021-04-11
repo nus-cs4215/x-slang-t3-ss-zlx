@@ -22,6 +22,7 @@ import { TfpdefContext } from '../lang/Python3Parser'
 import { VarargslistContext } from '../lang/Python3Parser'
 import { VfpdefContext } from '../lang/Python3Parser'
 import { Simple_stmtContext } from '../lang/Python3Parser'
+import { StmtContext } from '../lang/Python3Parser'
 import { Small_stmtContext } from '../lang/Python3Parser'
 import { Expr_stmtContext } from '../lang/Python3Parser'
 import { Testlist_star_exprContext } from '../lang/Python3Parser'
@@ -221,6 +222,7 @@ class PythonStatementGenerator
     return (undefined as unknown) as ast.Statement
   }
   visitSimple_stmt(tree: Simple_stmtContext): ast.Statement {
+    console.log('visitSimple_stmt')
     const stmts = []
     for (let i = 0; i < tree.small_stmt().length; i++) {
       stmts.push(this.visit(tree.small_stmt(i)))
@@ -276,6 +278,15 @@ class PythonStatementGenerator
       return this.visit(ctx.nonlocal_stmt()!)
     } else {
       return this.visit(ctx.assert_stmt()!)
+    }
+  }
+
+  visitStmt(ctx: StmtContext): ast.Statement {
+    console.log('visitStmt')
+    if (ctx.simple_stmt() !== undefined) {
+      return this.visit(ctx.simple_stmt()!)
+    } else {
+      return this.visit(ctx.compound_stmt()!)
     }
   }
 
@@ -1853,6 +1864,7 @@ export function parse(source: string, context: Context) {
   if (context.variant === 'python') {
     const inputStream = new ANTLRInputStream(source)
     const lexer = new Python3Lexer(inputStream)
+    console.log(lexer.text)
     const tokenStream = new CommonTokenStream(lexer)
     const parser = new Python3Parser(tokenStream)
     parser.buildParseTree = true
