@@ -564,6 +564,31 @@ export class Python3Lexer extends Lexer {
     }
     return count
   }
+
+  nextToken() {
+    if (this._input.LA(1) === Python3Parser.EOF && this.indents.length) {
+      // Remove any trailing EOF tokens from our buffer.
+      this.token_queue = this.token_queue.filter(function (val) {
+        return val.type !== Python3Parser.EOF
+      })
+
+      // First emit an extra line break that serves as the end of the statement.
+      this.emitToken(this.commonToken(Python3Parser.NEWLINE, '\n'))
+
+      // Now emit as much DEDENT tokens as needed.
+      while (this.indents.length) {
+        this.emitToken(this.createDedent())
+        this.indents.pop()
+      }
+
+      // Put the EOF back on the token stream.
+      this.emitToken(this.commonToken(Python3Parser.EOF, '<EOF>'))
+    }
+
+    let next = Lexer.prototype.nextToken.call(this)
+    return this.token_queue.length ? this.token_queue.shift() : next
+  }
+
   private createDedent() {
     return this.commonToken(Python3Parser.DEDENT, '')
   }
