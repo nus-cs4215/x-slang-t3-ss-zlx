@@ -177,14 +177,14 @@ export interface ForPythonStatement extends BaseStatement {
   iter: Expression
   iterated: Array<Expression>
   body: Statement
-  else: Statement | null
+  els: Statement | null
 }
 
 export interface WhilePythonStatement extends BaseStatement {
   type: 'WhilePythonStatement'
   test: Expression
   body: Statement
-  else: Statement | null
+  els: Statement | null
 }
 
 export interface GlobalStatement extends BaseStatement {

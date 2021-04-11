@@ -366,13 +366,14 @@ export const whileStatement = (
 })
 
 export const whilePythonStatement = (
-  body: ast.BlockStatement,
   test: ast.Expression,
+  body: ast.Statement,
+  els: ast.Statement,
   loc?: ast.SourceLocation | null
 ): ast.WhilePythonStatement => ({
   type: 'WhilePythonStatement',
   test,
   body,
-  else: null,
+  els,
   loc
 })
