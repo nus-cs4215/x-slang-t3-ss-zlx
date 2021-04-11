@@ -256,7 +256,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
       const length = node.expressions.length
       if (length > 1){
-        let returnArray = []
+        const returnArray = []
         for (let i = 0; i < length -1; i++) {
           returnArray.push(yield * evaluate(node.expressions[i], context))
         }
@@ -355,8 +355,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     ParameterExpression: function*(node: ast.ParameterExpression, context: Context) {
-      let expressions = node.expressions
-      let returnArray = []
+      const expressions = node.expressions
+      const returnArray = []
       for (let i=0; i < expressions.length -1; i++){
         returnArray.push(yield * evaluate(expressions[i], context))
       }
@@ -368,8 +368,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     ArgListExpression: function*(node: ast.ArgListExpression, context: Context) {
-      let body = node.body
-      let returnArray = []
+      const body = node.body
+      const returnArray = []
       for(let i=0; i < body.length -1; i++){
         returnArray.push(yield * evaluate(body[i], context))
       }

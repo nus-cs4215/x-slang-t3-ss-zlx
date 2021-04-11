@@ -3,16 +3,16 @@
 import { ATN } from 'antlr4ts/atn/ATN'
 import { ATNDeserializer } from 'antlr4ts/atn/ATNDeserializer'
 import { FailedPredicateException } from 'antlr4ts/FailedPredicateException'
-//import { NotNull } from "antlr4ts/Decorators";
+// import { NotNull } from "antlr4ts/Decorators";
 import { NoViableAltException } from 'antlr4ts/NoViableAltException'
-//import { Override } from "antlr4ts/Decorators";
+// import { Override } from "antlr4ts/Decorators";
 import { Parser } from 'antlr4ts/Parser'
 import { ParserRuleContext } from 'antlr4ts/ParserRuleContext'
 import { ParserATNSimulator } from 'antlr4ts/atn/ParserATNSimulator'
-//import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
-//import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
+// import { ParseTreeListener } from "antlr4ts/tree/ParseTreeListener";
+// import { ParseTreeVisitor } from "antlr4ts/tree/ParseTreeVisitor";
 import { RecognitionException } from 'antlr4ts/RecognitionException'
-//import { RuleContext } from "antlr4ts/RuleContext";
+// import { RuleContext } from "antlr4ts/RuleContext";
 //import { RuleVersion } from "antlr4ts/RuleVersion";
 import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 import { Token } from 'antlr4ts/Token'
@@ -523,7 +523,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public single_input(): Single_inputContext {
-    const _localctx: Single_inputContext = new Single_inputContext(this._ctx, this.state)
+    let _localctx: Single_inputContext = new Single_inputContext(this._ctx, this.state)
     this.enterRule(_localctx, 0, Python3Parser.RULE_single_input)
     try {
       this.state = 173
@@ -610,7 +610,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public file_input(): File_inputContext {
-    const _localctx: File_inputContext = new File_inputContext(this._ctx, this.state)
+    let _localctx: File_inputContext = new File_inputContext(this._ctx, this.state)
     this.enterRule(_localctx, 2, Python3Parser.RULE_file_input)
     let _la: number
     try {
@@ -756,7 +756,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public eval_input(): Eval_inputContext {
-    const _localctx: Eval_inputContext = new Eval_inputContext(this._ctx, this.state)
+    let _localctx: Eval_inputContext = new Eval_inputContext(this._ctx, this.state)
     this.enterRule(_localctx, 4, Python3Parser.RULE_eval_input)
     let _la: number
     try {
@@ -796,7 +796,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public decorator(): DecoratorContext {
-    const _localctx: DecoratorContext = new DecoratorContext(this._ctx, this.state)
+    let _localctx: DecoratorContext = new DecoratorContext(this._ctx, this.state)
     this.enterRule(_localctx, 6, Python3Parser.RULE_decorator)
     let _la: number
     try {
@@ -876,7 +876,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public decorators(): DecoratorsContext {
-    const _localctx: DecoratorsContext = new DecoratorsContext(this._ctx, this.state)
+    let _localctx: DecoratorsContext = new DecoratorsContext(this._ctx, this.state)
     this.enterRule(_localctx, 8, Python3Parser.RULE_decorators)
     let _la: number
     try {
@@ -912,7 +912,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public decorated(): DecoratedContext {
-    const _localctx: DecoratedContext = new DecoratedContext(this._ctx, this.state)
+    let _localctx: DecoratedContext = new DecoratedContext(this._ctx, this.state)
     this.enterRule(_localctx, 10, Python3Parser.RULE_decorated)
     try {
       this.enterOuterAlt(_localctx, 1)
@@ -953,7 +953,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public funcdef(): FuncdefContext {
-    const _localctx: FuncdefContext = new FuncdefContext(this._ctx, this.state)
+    let _localctx: FuncdefContext = new FuncdefContext(this._ctx, this.state)
     this.enterRule(_localctx, 12, Python3Parser.RULE_funcdef)
     let _la: number
     try {
@@ -997,7 +997,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public parameters(): ParametersContext {
-    const _localctx: ParametersContext = new ParametersContext(this._ctx, this.state)
+    let _localctx: ParametersContext = new ParametersContext(this._ctx, this.state)
     this.enterRule(_localctx, 14, Python3Parser.RULE_parameters)
     let _la: number
     try {
@@ -1040,7 +1040,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public typedargslist(): TypedargslistContext {
-    const _localctx: TypedargslistContext = new TypedargslistContext(this._ctx, this.state)
+    let _localctx: TypedargslistContext = new TypedargslistContext(this._ctx, this.state)
     this.enterRule(_localctx, 16, Python3Parser.RULE_typedargslist)
     let _la: number
     try {
@@ -1265,7 +1265,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public tfpdef(): TfpdefContext {
-    const _localctx: TfpdefContext = new TfpdefContext(this._ctx, this.state)
+    let _localctx: TfpdefContext = new TfpdefContext(this._ctx, this.state)
     this.enterRule(_localctx, 18, Python3Parser.RULE_tfpdef)
     let _la: number
     try {
@@ -1300,7 +1300,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public varargslist(): VarargslistContext {
-    const _localctx: VarargslistContext = new VarargslistContext(this._ctx, this.state)
+    let _localctx: VarargslistContext = new VarargslistContext(this._ctx, this.state)
     this.enterRule(_localctx, 20, Python3Parser.RULE_varargslist)
     let _la: number
     try {
@@ -1525,7 +1525,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public vfpdef(): VfpdefContext {
-    const _localctx: VfpdefContext = new VfpdefContext(this._ctx, this.state)
+    let _localctx: VfpdefContext = new VfpdefContext(this._ctx, this.state)
     this.enterRule(_localctx, 22, Python3Parser.RULE_vfpdef)
     try {
       this.enterOuterAlt(_localctx, 1)
@@ -1548,7 +1548,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public stmt(): StmtContext {
-    const _localctx: StmtContext = new StmtContext(this._ctx, this.state)
+    let _localctx: StmtContext = new StmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 24, Python3Parser.RULE_stmt)
     try {
       this.state = 373
@@ -1626,7 +1626,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public simple_stmt(): Simple_stmtContext {
-    const _localctx: Simple_stmtContext = new Simple_stmtContext(this._ctx, this.state)
+    let _localctx: Simple_stmtContext = new Simple_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 26, Python3Parser.RULE_simple_stmt)
     let _la: number
     try {
@@ -1681,7 +1681,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public small_stmt(): Small_stmtContext {
-    const _localctx: Small_stmtContext = new Small_stmtContext(this._ctx, this.state)
+    let _localctx: Small_stmtContext = new Small_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 28, Python3Parser.RULE_small_stmt)
     try {
       this.state = 396
@@ -1787,7 +1787,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public expr_stmt(): Expr_stmtContext {
-    const _localctx: Expr_stmtContext = new Expr_stmtContext(this._ctx, this.state)
+    let _localctx: Expr_stmtContext = new Expr_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 30, Python3Parser.RULE_expr_stmt)
     let _la: number
     try {
@@ -1933,10 +1933,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public testlist_star_expr(): Testlist_star_exprContext {
-    const _localctx: Testlist_star_exprContext = new Testlist_star_exprContext(
-      this._ctx,
-      this.state
-    )
+    let _localctx: Testlist_star_exprContext = new Testlist_star_exprContext(this._ctx, this.state)
     this.enterRule(_localctx, 32, Python3Parser.RULE_testlist_star_expr)
     let _la: number
     try {
@@ -2018,7 +2015,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public augassign(): AugassignContext {
-    const _localctx: AugassignContext = new AugassignContext(this._ctx, this.state)
+    let _localctx: AugassignContext = new AugassignContext(this._ctx, this.state)
     this.enterRule(_localctx, 34, Python3Parser.RULE_augassign)
     let _la: number
     try {
@@ -2071,7 +2068,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public del_stmt(): Del_stmtContext {
-    const _localctx: Del_stmtContext = new Del_stmtContext(this._ctx, this.state)
+    let _localctx: Del_stmtContext = new Del_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 36, Python3Parser.RULE_del_stmt)
     try {
       this.enterOuterAlt(_localctx, 1)
@@ -2096,7 +2093,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public pass_stmt(): Pass_stmtContext {
-    const _localctx: Pass_stmtContext = new Pass_stmtContext(this._ctx, this.state)
+    let _localctx: Pass_stmtContext = new Pass_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 38, Python3Parser.RULE_pass_stmt)
     try {
       this.enterOuterAlt(_localctx, 1)
@@ -2119,7 +2116,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public flow_stmt(): Flow_stmtContext {
-    const _localctx: Flow_stmtContext = new Flow_stmtContext(this._ctx, this.state)
+    let _localctx: Flow_stmtContext = new Flow_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 40, Python3Parser.RULE_flow_stmt)
     try {
       this.state = 445
@@ -2178,7 +2175,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public break_stmt(): Break_stmtContext {
-    const _localctx: Break_stmtContext = new Break_stmtContext(this._ctx, this.state)
+    let _localctx: Break_stmtContext = new Break_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 42, Python3Parser.RULE_break_stmt)
     try {
       this.enterOuterAlt(_localctx, 1)
@@ -2201,7 +2198,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public continue_stmt(): Continue_stmtContext {
-    const _localctx: Continue_stmtContext = new Continue_stmtContext(this._ctx, this.state)
+    let _localctx: Continue_stmtContext = new Continue_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 44, Python3Parser.RULE_continue_stmt)
     try {
       this.enterOuterAlt(_localctx, 1)
@@ -2224,7 +2221,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public return_stmt(): Return_stmtContext {
-    const _localctx: Return_stmtContext = new Return_stmtContext(this._ctx, this.state)
+    let _localctx: Return_stmtContext = new Return_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 46, Python3Parser.RULE_return_stmt)
     let _la: number
     try {
@@ -2286,7 +2283,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public yield_stmt(): Yield_stmtContext {
-    const _localctx: Yield_stmtContext = new Yield_stmtContext(this._ctx, this.state)
+    let _localctx: Yield_stmtContext = new Yield_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 48, Python3Parser.RULE_yield_stmt)
     try {
       this.enterOuterAlt(_localctx, 1)
@@ -2309,7 +2306,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public raise_stmt(): Raise_stmtContext {
-    const _localctx: Raise_stmtContext = new Raise_stmtContext(this._ctx, this.state)
+    let _localctx: Raise_stmtContext = new Raise_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 50, Python3Parser.RULE_raise_stmt)
     let _la: number
     try {
@@ -2382,7 +2379,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public import_stmt(): Import_stmtContext {
-    const _localctx: Import_stmtContext = new Import_stmtContext(this._ctx, this.state)
+    let _localctx: Import_stmtContext = new Import_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 52, Python3Parser.RULE_import_stmt)
     try {
       this.state = 467
@@ -2420,7 +2417,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public import_name(): Import_nameContext {
-    const _localctx: Import_nameContext = new Import_nameContext(this._ctx, this.state)
+    let _localctx: Import_nameContext = new Import_nameContext(this._ctx, this.state)
     this.enterRule(_localctx, 54, Python3Parser.RULE_import_name)
     try {
       this.enterOuterAlt(_localctx, 1)
@@ -2445,7 +2442,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public import_from(): Import_fromContext {
-    const _localctx: Import_fromContext = new Import_fromContext(this._ctx, this.state)
+    let _localctx: Import_fromContext = new Import_fromContext(this._ctx, this.state)
     this.enterRule(_localctx, 56, Python3Parser.RULE_import_from)
     let _la: number
     try {
@@ -2562,7 +2559,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public import_as_name(): Import_as_nameContext {
-    const _localctx: Import_as_nameContext = new Import_as_nameContext(this._ctx, this.state)
+    let _localctx: Import_as_nameContext = new Import_as_nameContext(this._ctx, this.state)
     this.enterRule(_localctx, 58, Python3Parser.RULE_import_as_name)
     let _la: number
     try {
@@ -2597,7 +2594,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public dotted_as_name(): Dotted_as_nameContext {
-    const _localctx: Dotted_as_nameContext = new Dotted_as_nameContext(this._ctx, this.state)
+    let _localctx: Dotted_as_nameContext = new Dotted_as_nameContext(this._ctx, this.state)
     this.enterRule(_localctx, 60, Python3Parser.RULE_dotted_as_name)
     let _la: number
     try {
@@ -2632,7 +2629,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public import_as_names(): Import_as_namesContext {
-    const _localctx: Import_as_namesContext = new Import_as_namesContext(this._ctx, this.state)
+    let _localctx: Import_as_namesContext = new Import_as_namesContext(this._ctx, this.state)
     this.enterRule(_localctx, 62, Python3Parser.RULE_import_as_names)
     let _la: number
     try {
@@ -2684,7 +2681,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public dotted_as_names(): Dotted_as_namesContext {
-    const _localctx: Dotted_as_namesContext = new Dotted_as_namesContext(this._ctx, this.state)
+    let _localctx: Dotted_as_namesContext = new Dotted_as_namesContext(this._ctx, this.state)
     this.enterRule(_localctx, 64, Python3Parser.RULE_dotted_as_names)
     let _la: number
     try {
@@ -2724,7 +2721,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public dotted_name(): Dotted_nameContext {
-    const _localctx: Dotted_nameContext = new Dotted_nameContext(this._ctx, this.state)
+    let _localctx: Dotted_nameContext = new Dotted_nameContext(this._ctx, this.state)
     this.enterRule(_localctx, 66, Python3Parser.RULE_dotted_name)
     let _la: number
     try {
@@ -2764,7 +2761,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public global_stmt(): Global_stmtContext {
-    const _localctx: Global_stmtContext = new Global_stmtContext(this._ctx, this.state)
+    let _localctx: Global_stmtContext = new Global_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 68, Python3Parser.RULE_global_stmt)
     let _la: number
     try {
@@ -2806,7 +2803,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public nonlocal_stmt(): Nonlocal_stmtContext {
-    const _localctx: Nonlocal_stmtContext = new Nonlocal_stmtContext(this._ctx, this.state)
+    let _localctx: Nonlocal_stmtContext = new Nonlocal_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 70, Python3Parser.RULE_nonlocal_stmt)
     let _la: number
     try {
@@ -2848,7 +2845,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public assert_stmt(): Assert_stmtContext {
-    const _localctx: Assert_stmtContext = new Assert_stmtContext(this._ctx, this.state)
+    let _localctx: Assert_stmtContext = new Assert_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 72, Python3Parser.RULE_assert_stmt)
     let _la: number
     try {
@@ -2885,7 +2882,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public compound_stmt(): Compound_stmtContext {
-    const _localctx: Compound_stmtContext = new Compound_stmtContext(this._ctx, this.state)
+    let _localctx: Compound_stmtContext = new Compound_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 74, Python3Parser.RULE_compound_stmt)
     try {
       this.state = 565
@@ -2965,7 +2962,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public if_stmt(): If_stmtContext {
-    const _localctx: If_stmtContext = new If_stmtContext(this._ctx, this.state)
+    let _localctx: If_stmtContext = new If_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 76, Python3Parser.RULE_if_stmt)
     let _la: number
     try {
@@ -3028,7 +3025,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public while_stmt(): While_stmtContext {
-    const _localctx: While_stmtContext = new While_stmtContext(this._ctx, this.state)
+    let _localctx: While_stmtContext = new While_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 78, Python3Parser.RULE_while_stmt)
     let _la: number
     try {
@@ -3071,7 +3068,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public for_stmt(): For_stmtContext {
-    const _localctx: For_stmtContext = new For_stmtContext(this._ctx, this.state)
+    let _localctx: For_stmtContext = new For_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 80, Python3Parser.RULE_for_stmt)
     let _la: number
     try {
@@ -3118,7 +3115,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public try_stmt(): Try_stmtContext {
-    const _localctx: Try_stmtContext = new Try_stmtContext(this._ctx, this.state)
+    let _localctx: Try_stmtContext = new Try_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 82, Python3Parser.RULE_try_stmt)
     let _la: number
     try {
@@ -3211,7 +3208,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public with_stmt(): With_stmtContext {
-    const _localctx: With_stmtContext = new With_stmtContext(this._ctx, this.state)
+    let _localctx: With_stmtContext = new With_stmtContext(this._ctx, this.state)
     this.enterRule(_localctx, 84, Python3Parser.RULE_with_stmt)
     let _la: number
     try {
@@ -3257,7 +3254,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public with_item(): With_itemContext {
-    const _localctx: With_itemContext = new With_itemContext(this._ctx, this.state)
+    let _localctx: With_itemContext = new With_itemContext(this._ctx, this.state)
     this.enterRule(_localctx, 86, Python3Parser.RULE_with_item)
     let _la: number
     try {
@@ -3292,7 +3289,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public except_clause(): Except_clauseContext {
-    const _localctx: Except_clauseContext = new Except_clauseContext(this._ctx, this.state)
+    let _localctx: Except_clauseContext = new Except_clauseContext(this._ctx, this.state)
     this.enterRule(_localctx, 88, Python3Parser.RULE_except_clause)
     let _la: number
     try {
@@ -3365,7 +3362,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public suite(): SuiteContext {
-    const _localctx: SuiteContext = new SuiteContext(this._ctx, this.state)
+    let _localctx: SuiteContext = new SuiteContext(this._ctx, this.state)
     this.enterRule(_localctx, 90, Python3Parser.RULE_suite)
     let _la: number
     try {
@@ -3507,7 +3504,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public test(): TestContext {
-    const _localctx: TestContext = new TestContext(this._ctx, this.state)
+    let _localctx: TestContext = new TestContext(this._ctx, this.state)
     this.enterRule(_localctx, 92, Python3Parser.RULE_test)
     let _la: number
     try {
@@ -3581,7 +3578,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public test_nocond(): Test_nocondContext {
-    const _localctx: Test_nocondContext = new Test_nocondContext(this._ctx, this.state)
+    let _localctx: Test_nocondContext = new Test_nocondContext(this._ctx, this.state)
     this.enterRule(_localctx, 94, Python3Parser.RULE_test_nocond)
     try {
       this.state = 682
@@ -3639,7 +3636,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public lambdef(): LambdefContext {
-    const _localctx: LambdefContext = new LambdefContext(this._ctx, this.state)
+    let _localctx: LambdefContext = new LambdefContext(this._ctx, this.state)
     this.enterRule(_localctx, 96, Python3Parser.RULE_lambdef)
     let _la: number
     try {
@@ -3684,7 +3681,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public lambdef_nocond(): Lambdef_nocondContext {
-    const _localctx: Lambdef_nocondContext = new Lambdef_nocondContext(this._ctx, this.state)
+    let _localctx: Lambdef_nocondContext = new Lambdef_nocondContext(this._ctx, this.state)
     this.enterRule(_localctx, 98, Python3Parser.RULE_lambdef_nocond)
     let _la: number
     try {
@@ -3729,7 +3726,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public or_test(): Or_testContext {
-    const _localctx: Or_testContext = new Or_testContext(this._ctx, this.state)
+    let _localctx: Or_testContext = new Or_testContext(this._ctx, this.state)
     this.enterRule(_localctx, 100, Python3Parser.RULE_or_test)
     let _la: number
     try {
@@ -3769,7 +3766,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public and_test(): And_testContext {
-    const _localctx: And_testContext = new And_testContext(this._ctx, this.state)
+    let _localctx: And_testContext = new And_testContext(this._ctx, this.state)
     this.enterRule(_localctx, 102, Python3Parser.RULE_and_test)
     let _la: number
     try {
@@ -3809,7 +3806,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public not_test(): Not_testContext {
-    const _localctx: Not_testContext = new Not_testContext(this._ctx, this.state)
+    let _localctx: Not_testContext = new Not_testContext(this._ctx, this.state)
     this.enterRule(_localctx, 104, Python3Parser.RULE_not_test)
     try {
       this.state = 717
@@ -3868,7 +3865,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public comparison(): ComparisonContext {
-    const _localctx: ComparisonContext = new ComparisonContext(this._ctx, this.state)
+    let _localctx: ComparisonContext = new ComparisonContext(this._ctx, this.state)
     this.enterRule(_localctx, 106, Python3Parser.RULE_comparison)
     let _la: number
     try {
@@ -3923,7 +3920,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public comp_op(): Comp_opContext {
-    const _localctx: Comp_opContext = new Comp_opContext(this._ctx, this.state)
+    let _localctx: Comp_opContext = new Comp_opContext(this._ctx, this.state)
     this.enterRule(_localctx, 108, Python3Parser.RULE_comp_op)
     try {
       this.state = 741
@@ -4036,7 +4033,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public star_expr(): Star_exprContext {
-    const _localctx: Star_exprContext = new Star_exprContext(this._ctx, this.state)
+    let _localctx: Star_exprContext = new Star_exprContext(this._ctx, this.state)
     this.enterRule(_localctx, 110, Python3Parser.RULE_star_expr)
     let _la: number
     try {
@@ -4070,7 +4067,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public expr(): ExprContext {
-    const _localctx: ExprContext = new ExprContext(this._ctx, this.state)
+    let _localctx: ExprContext = new ExprContext(this._ctx, this.state)
     this.enterRule(_localctx, 112, Python3Parser.RULE_expr)
     let _la: number
     try {
@@ -4110,7 +4107,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public xor_expr(): Xor_exprContext {
-    const _localctx: Xor_exprContext = new Xor_exprContext(this._ctx, this.state)
+    let _localctx: Xor_exprContext = new Xor_exprContext(this._ctx, this.state)
     this.enterRule(_localctx, 114, Python3Parser.RULE_xor_expr)
     let _la: number
     try {
@@ -4150,7 +4147,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public and_expr(): And_exprContext {
-    const _localctx: And_exprContext = new And_exprContext(this._ctx, this.state)
+    let _localctx: And_exprContext = new And_exprContext(this._ctx, this.state)
     this.enterRule(_localctx, 116, Python3Parser.RULE_and_expr)
     let _la: number
     try {
@@ -4190,7 +4187,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public shift_expr(): Shift_exprContext {
-    const _localctx: Shift_exprContext = new Shift_exprContext(this._ctx, this.state)
+    let _localctx: Shift_exprContext = new Shift_exprContext(this._ctx, this.state)
     this.enterRule(_localctx, 118, Python3Parser.RULE_shift_expr)
     let _la: number
     try {
@@ -4246,7 +4243,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public arith_expr(): Arith_exprContext {
-    const _localctx: Arith_exprContext = new Arith_exprContext(this._ctx, this.state)
+    let _localctx: Arith_exprContext = new Arith_exprContext(this._ctx, this.state)
     this.enterRule(_localctx, 120, Python3Parser.RULE_arith_expr)
     let _la: number
     try {
@@ -4302,7 +4299,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public term(): TermContext {
-    const _localctx: TermContext = new TermContext(this._ctx, this.state)
+    let _localctx: TermContext = new TermContext(this._ctx, this.state)
     this.enterRule(_localctx, 122, Python3Parser.RULE_term)
     let _la: number
     try {
@@ -4391,7 +4388,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public factor(): FactorContext {
-    const _localctx: FactorContext = new FactorContext(this._ctx, this.state)
+    let _localctx: FactorContext = new FactorContext(this._ctx, this.state)
     this.enterRule(_localctx, 124, Python3Parser.RULE_factor)
     try {
       this.state = 815
@@ -4464,7 +4461,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public power(): PowerContext {
-    const _localctx: PowerContext = new PowerContext(this._ctx, this.state)
+    let _localctx: PowerContext = new PowerContext(this._ctx, this.state)
     this.enterRule(_localctx, 126, Python3Parser.RULE_power)
     let _la: number
     try {
@@ -4520,7 +4517,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public atom(): AtomContext {
-    const _localctx: AtomContext = new AtomContext(this._ctx, this.state)
+    let _localctx: AtomContext = new AtomContext(this._ctx, this.state)
     this.enterRule(_localctx, 128, Python3Parser.RULE_atom)
     let _la: number
     try {
@@ -4758,7 +4755,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public testlist_comp(): Testlist_compContext {
-    const _localctx: Testlist_compContext = new Testlist_compContext(this._ctx, this.state)
+    let _localctx: Testlist_compContext = new Testlist_compContext(this._ctx, this.state)
     this.enterRule(_localctx, 130, Python3Parser.RULE_testlist_comp)
     let _la: number
     try {
@@ -4828,7 +4825,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public trailer(): TrailerContext {
-    const _localctx: TrailerContext = new TrailerContext(this._ctx, this.state)
+    let _localctx: TrailerContext = new TrailerContext(this._ctx, this.state)
     this.enterRule(_localctx, 132, Python3Parser.RULE_trailer)
     let _la: number
     try {
@@ -4922,7 +4919,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public subscriptlist(): SubscriptlistContext {
-    const _localctx: SubscriptlistContext = new SubscriptlistContext(this._ctx, this.state)
+    let _localctx: SubscriptlistContext = new SubscriptlistContext(this._ctx, this.state)
     this.enterRule(_localctx, 134, Python3Parser.RULE_subscriptlist)
     let _la: number
     try {
@@ -4974,7 +4971,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public subscript(): SubscriptContext {
-    const _localctx: SubscriptContext = new SubscriptContext(this._ctx, this.state)
+    let _localctx: SubscriptContext = new SubscriptContext(this._ctx, this.state)
     this.enterRule(_localctx, 136, Python3Parser.RULE_subscript)
     let _la: number
     try {
@@ -5099,7 +5096,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public sliceop(): SliceopContext {
-    const _localctx: SliceopContext = new SliceopContext(this._ctx, this.state)
+    let _localctx: SliceopContext = new SliceopContext(this._ctx, this.state)
     this.enterRule(_localctx, 138, Python3Parser.RULE_sliceop)
     let _la: number
     try {
@@ -5161,7 +5158,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public exprlist(): ExprlistContext {
-    const _localctx: ExprlistContext = new ExprlistContext(this._ctx, this.state)
+    let _localctx: ExprlistContext = new ExprlistContext(this._ctx, this.state)
     this.enterRule(_localctx, 140, Python3Parser.RULE_exprlist)
     let _la: number
     try {
@@ -5213,7 +5210,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public testlist(): TestlistContext {
-    const _localctx: TestlistContext = new TestlistContext(this._ctx, this.state)
+    let _localctx: TestlistContext = new TestlistContext(this._ctx, this.state)
     this.enterRule(_localctx, 142, Python3Parser.RULE_testlist)
     let _la: number
     try {
@@ -5265,7 +5262,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public dictorsetmaker(): DictorsetmakerContext {
-    const _localctx: DictorsetmakerContext = new DictorsetmakerContext(this._ctx, this.state)
+    let _localctx: DictorsetmakerContext = new DictorsetmakerContext(this._ctx, this.state)
     this.enterRule(_localctx, 144, Python3Parser.RULE_dictorsetmaker)
     let _la: number
     try {
@@ -5400,7 +5397,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public classdef(): ClassdefContext {
-    const _localctx: ClassdefContext = new ClassdefContext(this._ctx, this.state)
+    let _localctx: ClassdefContext = new ClassdefContext(this._ctx, this.state)
     this.enterRule(_localctx, 146, Python3Parser.RULE_classdef)
     let _la: number
     try {
@@ -5482,7 +5479,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public arglist(): ArglistContext {
-    const _localctx: ArglistContext = new ArglistContext(this._ctx, this.state)
+    let _localctx: ArglistContext = new ArglistContext(this._ctx, this.state)
     this.enterRule(_localctx, 148, Python3Parser.RULE_arglist)
     let _la: number
     try {
@@ -5591,7 +5588,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public argument(): ArgumentContext {
-    const _localctx: ArgumentContext = new ArgumentContext(this._ctx, this.state)
+    let _localctx: ArgumentContext = new ArgumentContext(this._ctx, this.state)
     this.enterRule(_localctx, 150, Python3Parser.RULE_argument)
     let _la: number
     try {
@@ -5642,7 +5639,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public comp_iter(): Comp_iterContext {
-    const _localctx: Comp_iterContext = new Comp_iterContext(this._ctx, this.state)
+    let _localctx: Comp_iterContext = new Comp_iterContext(this._ctx, this.state)
     this.enterRule(_localctx, 152, Python3Parser.RULE_comp_iter)
     try {
       this.state = 1023
@@ -5680,7 +5677,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public comp_for(): Comp_forContext {
-    const _localctx: Comp_forContext = new Comp_forContext(this._ctx, this.state)
+    let _localctx: Comp_forContext = new Comp_forContext(this._ctx, this.state)
     this.enterRule(_localctx, 154, Python3Parser.RULE_comp_for)
     let _la: number
     try {
@@ -5719,7 +5716,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public comp_if(): Comp_ifContext {
-    const _localctx: Comp_ifContext = new Comp_ifContext(this._ctx, this.state)
+    let _localctx: Comp_ifContext = new Comp_ifContext(this._ctx, this.state)
     this.enterRule(_localctx, 156, Python3Parser.RULE_comp_if)
     let _la: number
     try {
@@ -5754,7 +5751,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public yield_expr(): Yield_exprContext {
-    const _localctx: Yield_exprContext = new Yield_exprContext(this._ctx, this.state)
+    let _localctx: Yield_exprContext = new Yield_exprContext(this._ctx, this.state)
     this.enterRule(_localctx, 158, Python3Parser.RULE_yield_expr)
     let _la: number
     try {
@@ -5817,7 +5814,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public yield_arg(): Yield_argContext {
-    const _localctx: Yield_argContext = new Yield_argContext(this._ctx, this.state)
+    let _localctx: Yield_argContext = new Yield_argContext(this._ctx, this.state)
     this.enterRule(_localctx, 160, Python3Parser.RULE_yield_arg)
     try {
       this.state = 1044
@@ -5878,7 +5875,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public str(): StrContext {
-    const _localctx: StrContext = new StrContext(this._ctx, this.state)
+    let _localctx: StrContext = new StrContext(this._ctx, this.state)
     this.enterRule(_localctx, 162, Python3Parser.RULE_str)
     let _la: number
     try {
@@ -5912,7 +5909,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public number(): NumberContext {
-    const _localctx: NumberContext = new NumberContext(this._ctx, this.state)
+    let _localctx: NumberContext = new NumberContext(this._ctx, this.state)
     this.enterRule(_localctx, 164, Python3Parser.RULE_number)
     try {
       this.state = 1051
@@ -5960,7 +5957,7 @@ export class Python3Parser extends Parser {
   }
   // @RuleVersion(0)
   public integer(): IntegerContext {
-    const _localctx: IntegerContext = new IntegerContext(this._ctx, this.state)
+    let _localctx: IntegerContext = new IntegerContext(this._ctx, this.state)
     this.enterRule(_localctx, 166, Python3Parser.RULE_integer)
     let _la: number
     try {

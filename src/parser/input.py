@@ -1,6 +1,6 @@
 def f(a):
     a = a - 1
     a = a - 1
-    return a
+    a = a - 1
 
-b = f(2)
+a = f(2)
