@@ -1,5 +1,5 @@
-a = 2
-while a > 0:
+def f(a):
     a = a - 1
+    return a
 
-a
+b = f(2)

@@ -14,6 +14,7 @@ import {
 } from '../utils/operators'
 import * as rttc from '../utils/rttc'
 import Closure from './closure'
+// import { update } from 'lodash'
 // import { constant } from 'lodash'
 // import { stat } from 'fs'
 
@@ -255,7 +256,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
       const length = node.expressions.length
       if (length > 1){
-        const returnArray = []
+        let returnArray = []
         for (let i = 0; i < length -1; i++) {
           returnArray.push(yield * evaluate(node.expressions[i], context))
         }
@@ -344,31 +345,54 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     // },
 
     FunctionPythonDeclaration: function*(node: ast.FunctionPythonDeclaration, context: Context) {
-      console.log("Function")
+      // console.log("Function")
       const id = node.id as ast.Identifier
       // tslint:disable-next-line:no-any
       const closure = new Closure(node, currentEnvironment(context), context)
       assignVariable(context, id.name, closure)
-      console.log(util.inspect(context, { showHidden: false, depth: null }))
+      // console.log(util.inspect(context, { showHidden: false, depth: null }))
       return undefined
     },
 
     ParameterExpression: function*(node: ast.ParameterExpression, context: Context) {
-      const expressions = node.expressions
-      const returnArray = []
+      let expressions = node.expressions
+      let returnArray = []
       for (let i=0; i < expressions.length -1; i++){
         returnArray.push(yield * evaluate(expressions[i], context))
       }
       return returnArray
     },
 
+    TypedargslistExpression: function*(node: ast.TypedargslistExpression, context: Context) {
+      return yield* evaluate(node.name, context)
+    },
+
+    ArgListExpression: function*(node: ast.ArgListExpression, context: Context) {
+      let body = node.body
+      let returnArray = []
+      for(let i=0; i < body.length -1; i++){
+        returnArray.push(yield * evaluate(body[i], context))
+      }
+    },
+
+    ArgumentExpression: function*(node: ast.ArgumentExpression, context: Context){
+      return yield * evaluate(node.value, context)
+    },
+
     TrailerExpression: function*(node: ast.TrailerExpression, context: Context) {
       const base = node.base as ast.Identifier
       const funcEnv = getVariable(context, base.name)
+      // const funcParams = yield * evaluate(node.trailer[0], context)
+      const funcArgs = yield * evaluate(node.trailer[0], context)
+      console.log("Environment:")
       console.log(util.inspect(funcEnv, { showHidden: false, depth: null }))
+      console.log("Params:")
+      // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
+      console.log("Args:")
+      console.log(util.inspect(funcArgs, { showHidden: false, depth: null }))
     },
 
-    ReturnStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
+    ReturnPythonStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
       const returnExpression = node.argument!
       // let nreturnExpression = returnExpression[0]
       // // If we have a conditional expression, reduce it until we get something else

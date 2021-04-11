@@ -122,6 +122,15 @@ export const returnStatement = (
   loc
 })
 
+export const returnPythonStatement = (
+  returned: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.ReturnPythonStatement => ({
+  type: 'ReturnPythonStatement',
+  argument: returned,
+  loc
+})
+
 export const property = (key: string, value: ast.Expression): ast.Property => ({
   type: 'Property',
   method: false,
@@ -290,6 +299,56 @@ export const functionPythonDeclaration = (
   id,
   params,
   body,
+  loc
+})
+
+export const parameterExpression = (
+  expressions: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.ParameterExpression => ({
+  type: 'ParameterExpression',
+  expressions,
+  loc
+})
+
+export const typedargslistExpression = (
+  name: ast.Expression,
+  loc?: ast.SourceLocation | null
+): ast.TypedargslistExpression => ({
+  type: 'TypedargslistExpression',
+  name,
+  default: null,
+  loc
+})
+
+export const trailerExpression = (
+  base: ast.Expression,
+  trailer: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.TrailerExpression => ({
+  type: 'TrailerExpression',
+  base,
+  trailer,
+  loc
+})
+
+export const argListExpression = (
+  body: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.ArgListExpression => ({
+  type: 'ArgListExpression',
+  body,
+  loc
+})
+
+export const argumentExpression = (
+  key: ast.Expression | null,
+  value: ast.Expression,
+  loc?: ast.SourceLocation | null
+): ast.ArgumentExpression => ({
+  type: 'ArgumentExpression',
+  key,
+  value,
   loc
 })
 
