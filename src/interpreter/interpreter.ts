@@ -1,5 +1,5 @@
 /* tslint:disable:max-classes-per-file */
-// const util = require('util')
+const util = require('util')
 import * as ast from '../parser/ast'
 import * as constants from '../constants'
 import * as errors from '../errors/errors'
@@ -256,7 +256,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
       const length = node.expressions.length
       if (length > 1){
-        const returnArray = []
+        let returnArray = []
         for (let i = 0; i < length -1; i++) {
           returnArray.push(yield * evaluate(node.expressions[i], context))
         }
@@ -315,6 +315,22 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         return evaluateConditionalExpression(test, consequent, alternate)
     },
 
+    IfStatement: function*(node: ast.IfStatement, context: Context) {
+      const test = yield* evaluate(node.test, context)
+      const error = rttc.checkIfStatement(node, test)
+      if (error) {
+        return handleRuntimeError(context, error)
+      }
+      console.log(test)
+      console.log(yield * evaluate(node.consequent, context))
+      console.log(yield * evaluate(node.alternate!, context))
+      return test ? yield * evaluate(node.consequent, context) : yield * evaluate(node.alternate!, context)
+    },
+
+    EmptyStatement: function*(node: ast.EmptyStatement, context: Context){
+
+    },
+
     AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
       const id = node.left as ast.Identifier
       const value = yield* evaluate(node.right, context)
@@ -326,11 +342,25 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       let value: any // tslint:disable-line
       while (
         // tslint:disable-next-line
-        yield* evaluate(node.test, context)
+        (yield* evaluate(node.test, context)) &&
+        !(value instanceof BreakValue)
       ) {
         value = yield* evaluate(node.body, context)
+        console.log(value)
+      }
+      if (value instanceof BreakValue) {
+        return undefined
       }
       return value
+    },
+
+    ContinueStatement: function*(node: ast.ContinueStatement, context: Context) {
+      console.log("Continue!")
+      return new ContinueValue()
+    },
+  
+    BreakStatement: function*(node: ast.BreakStatement, context: Context) {
+      return new BreakValue()
     },
 
     KeyValueExpression: function*(node: ast.KeyValueExpression, context: Context){
@@ -391,13 +421,16 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     ArgListExpression: function*(node: ast.ArgListExpression, context: Context) {
       const body = node.body
-      const returnArray = []
+      let returnArray = []
       for(let i=0; i < body.length -1; i++){
+        console.log(body[i])
         returnArray.push(yield * evaluate(body[i], context))
       }
+      return returnArray
     },
 
     ArgumentExpression: function*(node: ast.ArgumentExpression, context: Context){
+      console.log("Argument Expr")
       return yield * evaluate(node.value, context)
     },
 
@@ -408,6 +441,13 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       if (type === "SubscriptListExpression") {
         const arr = getVariable(context, base.name)
         return arr[trailer]
+      } else if (type === "ArgListExpression") {
+        // let funcClosure = getVariable(context, base.name)
+        // console.log(util.inspect(funcClosure, { showHidden: false, depth: null }))
+        // let funcParams = yield * evaluate(funcClosure.node.params, funcClosure)
+        // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
+        let funcArgs = yield * evaluate(node.trailer[0], context)
+        console.log(util.inspect(funcArgs, { showHidden: false, depth: null }))
       }
       // Function Call Specific!
       // const funcEnv = getVariable(context, base.name)

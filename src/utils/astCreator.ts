@@ -471,3 +471,19 @@ export const forPythonStatement = (
   els,
   loc
 })
+
+export const sequenceExpression = (
+  expressions: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.SequenceExpression => ({
+  type: 'SequenceExpression',
+  expressions,
+  loc
+})
+
+export const emptyStatement = (
+  loc?: ast.SourceLocation | null
+): ast.EmptyStatement => ({
+  type: 'EmptyStatement',
+  loc
+})

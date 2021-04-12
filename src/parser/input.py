@@ -1,9 +1,7 @@
 # def f(a):
 #     a = a - 1
-#     a = a - 1
-#     a = a - 1
-
-# a = f(2)
+#     return a
+# b = f(2)
 
 # Arrays
 # a = [1,3,7]
@@ -16,13 +14,22 @@
 # }
 # a["bye"]
 
-# While Loop
+## While Loop
 # a = 5
 # b = 0
-# while(a > 3):
+# while(a > 0):
 #     b = b + a
 #     a = a - 1
+#     if(a == 2):
+#         break
 # b
+
+# # If Else
+# a = True
+# b = 5
+# c = 10
+# if(a):
+#     c
 
 # Unary Expressions
 # a = False
