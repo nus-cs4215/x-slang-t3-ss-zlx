@@ -377,8 +377,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     ForPythonStatement: function*(node: ast.ForPythonStatement, context: Context) {
       // Create a new block scope for the loop variables
-      let iter = (node.iter as ast.Identifier).name
-      let iterated = getVariable(context, (node.iterated[0] as ast.Identifier).name)
+      const iter = (node.iter as ast.Identifier).name
+      const iterated = getVariable(context, (node.iterated[0] as ast.Identifier).name)
       // const loopEnvironment = createBlockEnvironment(context, 'forLoopEnvironment')
       // pushEnvironment(context, loopEnvironment)
       // const updateNode = node.update!
@@ -401,7 +401,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         //     defineVariable(context, name, loopEnvironment.head[name], true)
         //   }
         // }
-        let iterValue = iterated[i]
+        const iterValue = iterated[i]
         assignVariable(context, iter, iterValue)
   
         value = yield* evaluate(node.body, context)
@@ -466,7 +466,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       const returnArray = []
       if (body.length != 1) {
         for(let i=0; i < body.length; i++){
-          let value = yield * evaluate(body[i], context)
+          const value = yield * evaluate(body[i], context)
           returnArray.push(value)
         }
         return returnArray
