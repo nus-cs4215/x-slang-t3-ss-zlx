@@ -1,7 +1,14 @@
-# def f(a):
+# def f(a, b):
 #     a = a - 1
 #     return a
-# b = f(2)
+# b = f(2, 3)
+
+# For Loop
+a = 0
+arr = [1, 2, 3]
+for i in arr:
+    a = a + i
+a
 
 # Arrays
 # a = [1,3,7]

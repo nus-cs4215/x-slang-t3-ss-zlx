@@ -1,5 +1,5 @@
 /* tslint:disable:max-classes-per-file */
-const util = require('util')
+// const util = require('util')
 import * as ast from '../parser/ast'
 import * as constants from '../constants'
 import * as errors from '../errors/errors'
@@ -55,7 +55,7 @@ function* forceIt(val: any, context: Context): Value {
 export function* actualValue(exp: ast.Node, context: Context): Value {
   const evalResult = yield* evaluate(exp, context)
   const forced = yield* forceIt(evalResult, context)
-  console.log(forced)
+  // console.log(forced)
   return forced
 }
 
@@ -256,7 +256,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
       const length = node.expressions.length
       if (length > 1){
-        let returnArray = []
+        const returnArray = []
         for (let i = 0; i < length -1; i++) {
           returnArray.push(yield * evaluate(node.expressions[i], context))
         }
@@ -321,9 +321,6 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       if (error) {
         return handleRuntimeError(context, error)
       }
-      console.log(test)
-      console.log(yield * evaluate(node.consequent, context))
-      console.log(yield * evaluate(node.alternate!, context))
       return test ? yield * evaluate(node.consequent, context) : yield * evaluate(node.alternate!, context)
     },
 
@@ -346,7 +343,6 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         !(value instanceof BreakValue)
       ) {
         value = yield* evaluate(node.body, context)
-        console.log(value)
       }
       if (value instanceof BreakValue) {
         return undefined
@@ -381,9 +377,55 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     ForPythonStatement: function*(node: ast.ForPythonStatement, context: Context) {
       // Create a new block scope for the loop variables
-      // let iter = (node.iter as ast.Identifier).name
-      // let iterated = getVariable(context, (node.iterated[0] as ast.Identifier).name)
-      return "For Loop"
+      let iter = (node.iter as ast.Identifier).name
+      let iterated = getVariable(context, (node.iterated[0] as ast.Identifier).name)
+      // const loopEnvironment = createBlockEnvironment(context, 'forLoopEnvironment')
+      // pushEnvironment(context, loopEnvironment)
+      // const updateNode = node.update!
+      // if (initNode.type === 'VariableDeclaration') {
+      //   declareVariables(context, initNode)
+      // }
+      // yield* actualValue(initNode, context)
+      let value
+      for(let i =0; i < iterated.length; i++) {
+        // create block context and shallow copy loop environment head
+        // see https://www.ecma-international.org/ecma-262/6.0/#sec-for-statement-runtime-semantics-labelledevaluation
+        // and https://hacks.mozilla.org/2015/07/es6-in-depth-let-and-const/
+        // We copy this as a const to avoid ES6 funkiness when mutating loop vars
+        // https://github.com/source-academy/js-slang/issues/65#issuecomment-425618227
+        // const environment = createBlockEnvironment(context, 'forBlockEnvironment')
+        // pushEnvironment(context, environment)
+        // for (const name in loopEnvironment.head) {
+        //   if (loopEnvironment.head.hasOwnProperty(name)) {
+        //     declareIdentifier(context, name, node)
+        //     defineVariable(context, name, loopEnvironment.head[name], true)
+        //   }
+        // }
+        let iterValue = iterated[i]
+        assignVariable(context, iter, iterValue)
+  
+        value = yield* evaluate(node.body, context)
+        // console.log(value)
+  
+        // Remove block context
+        // popEnvironment(context)
+        if (value instanceof ContinueValue) {
+          value = undefined
+        }
+        if (value instanceof BreakValue) {
+          value = undefined
+          break
+        }
+        if (value instanceof ReturnValue || value instanceof TailCallReturnValue) {
+          break
+        }
+  
+        // yield* actualValue(updateNode, context)
+      }
+  
+      // popEnvironment(context)
+  
+      return value
     },
 
     // STRETCH GOAL
@@ -421,24 +463,28 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     ArgListExpression: function*(node: ast.ArgListExpression, context: Context) {
       const body = node.body
-      let returnArray = []
-      for(let i=0; i < body.length -1; i++){
-        console.log(body[i])
-        returnArray.push(yield * evaluate(body[i], context))
+      const returnArray = []
+      if (body.length != 1) {
+        for(let i=0; i < body.length; i++){
+          let value = yield * evaluate(body[i], context)
+          returnArray.push(value)
+        }
+        return returnArray
+      } else {
+        return yield * evaluate(body[0], context)
       }
-      return returnArray
+      
     },
 
     ArgumentExpression: function*(node: ast.ArgumentExpression, context: Context){
-      console.log("Argument Expr")
       return yield * evaluate(node.value, context)
     },
 
     TrailerExpression: function*(node: ast.TrailerExpression, context: Context) {
       const base = node.base as ast.Identifier
       const type = node.trailer[0].type
-      const trailer = yield * evaluate(node.trailer[0], context)
       if (type === "SubscriptListExpression") {
+        const trailer = yield * evaluate(node.trailer[0], context)
         const arr = getVariable(context, base.name)
         return arr[trailer]
       } else if (type === "ArgListExpression") {
@@ -446,8 +492,9 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         // console.log(util.inspect(funcClosure, { showHidden: false, depth: null }))
         // let funcParams = yield * evaluate(funcClosure.node.params, funcClosure)
         // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
-        let funcArgs = yield * evaluate(node.trailer[0], context)
-        console.log(util.inspect(funcArgs, { showHidden: false, depth: null }))
+        // console.log(node.trailer[0])
+        const funcArgs = yield * evaluate(node.trailer[0], context)
+        console.log(funcArgs)
       }
       // Function Call Specific!
       // const funcEnv = getVariable(context, base.name)
@@ -515,7 +562,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         const environment = createBlockEnvironment(context, 'programEnvironment')
         pushEnvironment(context, environment)
         const result = yield* forceIt(yield* evaluateBlockSatement(context, node), context);
-        console.log("Program")
+        // console.log("Program")
         return result;
     }
 }

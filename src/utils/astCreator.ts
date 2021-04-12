@@ -481,9 +481,7 @@ export const sequenceExpression = (
   loc
 })
 
-export const emptyStatement = (
-  loc?: ast.SourceLocation | null
-): ast.EmptyStatement => ({
+export const emptyStatement = (loc?: ast.SourceLocation | null): ast.EmptyStatement => ({
   type: 'EmptyStatement',
   loc
 })
