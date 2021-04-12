@@ -428,16 +428,6 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       return value
     },
 
-    // STRETCH GOAL
-    // ContinueStatement: function*(node: es.ContinueStatement, context: Context) {
-    //     throw new Error("Continue statements not supported in x-slang");
-    // },
-
-    // STRETCH GOAL
-    // BreakStatement: function*(node: es.BreakStatement, context: Context) {
-    //     throw new Error("Break statements not supported in x-slang");
-    // },
-
     FunctionPythonDeclaration: function*(node: ast.FunctionPythonDeclaration, context: Context) {
       // console.log("Function")
       const id = node.id as ast.Identifier
@@ -493,8 +483,10 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         // let funcParams = yield * evaluate(funcClosure.node.params, funcClosure)
         // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
         // console.log(node.trailer[0])
-        const funcArgs = yield * evaluate(node.trailer[0], context)
-        console.log(funcArgs)
+        const args = yield * evaluate(node.trailer[0], context)
+        console.log(args)
+        // const result = yield* apply(context, callee, args, node, thisContext)
+        // return result
       }
       // Function Call Specific!
       // const funcEnv = getVariable(context, base.name)
