@@ -420,7 +420,7 @@ class PythonStatementGenerator
         type: 'WhilePythonStatement',
         test: generator.visit(ctx.test()),
         body: this.visit(ctx.suite(0)),
-        els: null
+        els: { type: 'PassStatement' }
       }
     }
   }
@@ -444,7 +444,7 @@ class PythonStatementGenerator
         iter: generator.visit(ctx.exprlist()),
         iterated: listgenerator.visit(ctx.testlist()),
         body: this.visit(ctx.suite(0)),
-        els: null
+        els: { type: 'PassStatement' }
       }
     }
   }
