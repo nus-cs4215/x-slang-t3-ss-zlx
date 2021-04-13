@@ -321,6 +321,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       if (error) {
         return handleRuntimeError(context, error)
       }
+      console.log(test)
       return test ? yield * evaluate(node.consequent, context) : yield * evaluate(node.alternate!, context)
     },
 
@@ -482,10 +483,10 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         // console.log(util.inspect(funcClosure, { showHidden: false, depth: null }))
         // let funcParams = yield * evaluate(funcClosure.node.params, funcClosure)
         // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
-        // console.log(node.trailer[0])
+        // console.log(node.trailer[0])        
         const args = yield * evaluate(node.trailer[0], context)
         console.log(args)
-        // const result = yield* apply(context, callee, args, node, thisContext)
+        // const result = yield* apply(context, funcClosure, args, funcClosure)
         // return result
       }
       // Function Call Specific!

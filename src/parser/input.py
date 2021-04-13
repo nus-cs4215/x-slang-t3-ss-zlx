@@ -1,14 +1,27 @@
-# def f(a, b):
-#     a = a - 1
-#     return a
-# b = f(2, 3)
+def f(a, b):
+    a = a - 1
+    return a
+b = f(2, 3)
 
 # For Loop
-a = 0
-arr = [1, 2, 3]
-for i in arr:
-    a = a + i
-a
+# a = 0
+# arr = [1, 2, 3]
+# for i in arr:
+#     if (i== 2):
+#         break
+#     a = a + i
+# a
+
+# a = 0
+# arr = [1, 2, 3]
+# i = 0
+# while(i < 3):
+#     if(arr[i] == 2):
+#         break
+#     a = a + arr[i]
+#     i = i + 1
+# a
+
 
 # Arrays
 # a = [1,3,7]
