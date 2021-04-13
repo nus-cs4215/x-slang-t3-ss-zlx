@@ -461,7 +461,7 @@ export const forPythonStatement = (
   iter: ast.Expression,
   iterated: ast.Expression[],
   body: ast.Statement,
-  els: ast.Statement | null,
+  els: ast.Statement,
   loc?: ast.SourceLocation | null
 ): ast.ForPythonStatement => ({
   type: 'ForPythonStatement',
@@ -478,6 +478,11 @@ export const sequenceExpression = (
 ): ast.SequenceExpression => ({
   type: 'SequenceExpression',
   expressions,
+  loc
+})
+
+export const passStatement = (loc?: ast.SourceLocation | null): ast.PassStatement => ({
+  type: 'PassStatement',
   loc
 })
 

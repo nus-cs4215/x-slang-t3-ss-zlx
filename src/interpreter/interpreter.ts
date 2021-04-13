@@ -236,7 +236,13 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     BlockStatement: function* (node: ast.BlockStatement, context: Context) {
       for (let i=0; i< node.body.length - 1; i++){
-        yield * evaluate(node.body[i], context)
+        let result = yield * evaluate(node.body[i], context)
+        if (result instanceof ReturnValue ||
+          result instanceof TailCallReturnValue ||
+          result instanceof BreakValue ||
+          result instanceof ContinueValue){
+            return result
+        }
       } 
       return yield * evaluate(node.body[node.body.length - 1], context)
     },
@@ -321,13 +327,12 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       if (error) {
         return handleRuntimeError(context, error)
       }
-      console.log(test)
       return test ? yield * evaluate(node.consequent, context) : yield * evaluate(node.alternate!, context)
     },
 
-    EmptyStatement: function*(node: ast.EmptyStatement, context: Context){
+    EmptyStatement: function*(node: ast.EmptyStatement, context: Context){},
 
-    },
+    PassStatement: function*(node: ast.PassStatement, context: Context){},
 
     AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
       const id = node.left as ast.Identifier
@@ -338,21 +343,29 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     WhilePythonStatement: function*(node: ast.WhilePythonStatement, context: Context) {
       let value: any // tslint:disable-line
-      while (
-        // tslint:disable-next-line
-        (yield* evaluate(node.test, context)) &&
-        !(value instanceof BreakValue)
-      ) {
+      while (yield* evaluate(node.test, context)) {
         value = yield* evaluate(node.body, context)
+        if (value instanceof ContinueValue) {
+          value = undefined
+          continue
+        }
+        if (value instanceof BreakValue) {
+          value = undefined
+          break
+        }
+        if (value instanceof ReturnValue || value instanceof TailCallReturnValue) {
+          break
+        }
       }
-      if (value instanceof BreakValue) {
-        return undefined
+
+      if (node.els.type === 'PassStatement'){
+        return value
+      }else {
+        return yield* evaluate(node.body, context)
       }
-      return value
     },
 
     ContinueStatement: function*(node: ast.ContinueStatement, context: Context) {
-      console.log("Continue!")
       return new ContinueValue()
     },
   
@@ -380,38 +393,14 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       // Create a new block scope for the loop variables
       const iter = (node.iter as ast.Identifier).name
       const iterated = getVariable(context, (node.iterated[0] as ast.Identifier).name)
-      // const loopEnvironment = createBlockEnvironment(context, 'forLoopEnvironment')
-      // pushEnvironment(context, loopEnvironment)
-      // const updateNode = node.update!
-      // if (initNode.type === 'VariableDeclaration') {
-      //   declareVariables(context, initNode)
-      // }
-      // yield* actualValue(initNode, context)
       let value
       for(let i =0; i < iterated.length; i++) {
-        // create block context and shallow copy loop environment head
-        // see https://www.ecma-international.org/ecma-262/6.0/#sec-for-statement-runtime-semantics-labelledevaluation
-        // and https://hacks.mozilla.org/2015/07/es6-in-depth-let-and-const/
-        // We copy this as a const to avoid ES6 funkiness when mutating loop vars
-        // https://github.com/source-academy/js-slang/issues/65#issuecomment-425618227
-        // const environment = createBlockEnvironment(context, 'forBlockEnvironment')
-        // pushEnvironment(context, environment)
-        // for (const name in loopEnvironment.head) {
-        //   if (loopEnvironment.head.hasOwnProperty(name)) {
-        //     declareIdentifier(context, name, node)
-        //     defineVariable(context, name, loopEnvironment.head[name], true)
-        //   }
-        // }
         const iterValue = iterated[i]
         assignVariable(context, iter, iterValue)
-  
         value = yield* evaluate(node.body, context)
-        // console.log(value)
-  
-        // Remove block context
-        // popEnvironment(context)
         if (value instanceof ContinueValue) {
           value = undefined
+          continue
         }
         if (value instanceof BreakValue) {
           value = undefined
@@ -420,13 +409,12 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         if (value instanceof ReturnValue || value instanceof TailCallReturnValue) {
           break
         }
-  
-        // yield* actualValue(updateNode, context)
       }
-  
-      // popEnvironment(context)
-  
-      return value
+      if (node.els.type === 'PassStatement'){
+        return value
+      }else {
+        return yield* evaluate(node.body, context)
+      }
     },
 
     FunctionPythonDeclaration: function*(node: ast.FunctionPythonDeclaration, context: Context) {
@@ -483,10 +471,10 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         // console.log(util.inspect(funcClosure, { showHidden: false, depth: null }))
         // let funcParams = yield * evaluate(funcClosure.node.params, funcClosure)
         // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
-        // console.log(node.trailer[0])        
+        // console.log(node.trailer[0])
         const args = yield * evaluate(node.trailer[0], context)
         console.log(args)
-        // const result = yield* apply(context, funcClosure, args, funcClosure)
+        // const result = yield* apply(context, callee, args, node, thisContext)
         // return result
       }
       // Function Call Specific!
