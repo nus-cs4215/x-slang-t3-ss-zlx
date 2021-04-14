@@ -439,7 +439,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     TypedargslistExpression: function*(node: ast.TypedargslistExpression, context: Context) {
       if (node.default !== null){
         let name = yield* evaluate(node.name, context)
-        assignVariable(context, name, node.default)
+        let de = yield* evaluate(node.default, context)
+        assignVariable(context, name, de)
         return name
       }else{
         return yield* evaluate(node.name, context)
@@ -488,11 +489,13 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         const functionDecl = yield * evaluate(node.base, context)
         const funEnvironment = createBlockEnvironment(context, "functionEnvironment")
         pushEnvironment(context, funEnvironment)
+        
         const params = yield * evaluate(functionDecl.params, context)
         const args = yield * evaluate(node.trailer[0], context)
-        for (let i = 0;i<params.length;i++){
+        for (let i = 0;i < args.length;i++){
           assignVariable(context, params[i], args[i])
         }
+
         const result = yield* evaluate(functionDecl.body, context)
 
 
@@ -520,7 +523,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       // while (nreturnExpression.type === 'ConditionalExpression') {
       //   nreturnExpression = yield* evaluate(nreturnExpression, context)
       // }
-      console.log("Return")
+      //console.log("Return")
       return new ReturnValue(yield* evaluate(returnExpression[0], context))
     },
 

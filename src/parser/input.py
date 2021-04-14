@@ -1,10 +1,10 @@
 c = 1
 
-def f(a, c):
+def f(a = 5, c = 4):
     a = a - 1
     a = a + c
     return a
-b = f(2, 3)
+b = f()
 
 # For Loop
 # a = 0
