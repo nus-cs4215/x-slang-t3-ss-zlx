@@ -421,8 +421,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       // console.log("Function")
       const id = node.id as ast.Identifier
       // tslint:disable-next-line:no-any
-      const closure = new Closure(node, currentEnvironment(context), context)
-      assignVariable(context, id.name, closure)
+      //const closure = new Closure(node, currentEnvironment(context), context)
+      assignVariable(context, id.name, node)
       // console.log(util.inspect(context, { showHidden: false, depth: null }))
       return undefined
     },
@@ -430,33 +430,47 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     ParameterExpression: function*(node: ast.ParameterExpression, context: Context) {
       const expressions = node.expressions
       const returnArray = []
-      for (let i=0; i < expressions.length -1; i++){
+      for (let i=0; i < expressions.length; i++){
         returnArray.push(yield * evaluate(expressions[i], context))
       }
       return returnArray
     },
 
     TypedargslistExpression: function*(node: ast.TypedargslistExpression, context: Context) {
-      return yield* evaluate(node.name, context)
+      if (node.default !== null){
+        let name = yield* evaluate(node.name, context)
+        let de = yield* evaluate(node.default, context)
+        assignVariable(context, name, de)
+        return name
+      }else{
+        return yield* evaluate(node.name, context)
+      }
     },
 
     ArgListExpression: function*(node: ast.ArgListExpression, context: Context) {
       const body = node.body
       const returnArray = []
-      if (body.length != 1) {
-        for(let i=0; i < body.length; i++){
-          const value = yield * evaluate(body[i], context)
-          returnArray.push(value)
-        }
-        return returnArray
-      } else {
-        return yield * evaluate(body[0], context)
+      //if (body.length != 1) {
+      for(let i=0; i < body.length; i++){
+        const value = yield * evaluate(body[i], context)
+        returnArray.push(value)
       }
+      return returnArray
+     // } else {
+      //  return yield * evaluate(body[0], context)
+     // }
       
     },
 
     ArgumentExpression: function*(node: ast.ArgumentExpression, context: Context){
-      return yield * evaluate(node.value, context)
+      if (node.key !== null){
+        let name = yield* evaluate(node.key, context)
+        let value = yield* evaluate(node.value, context)
+        assignVariable(context, name, value)
+        return name
+      }else{
+        return yield * evaluate(node.value, context)
+      }
     },
 
     TrailerExpression: function*(node: ast.TrailerExpression, context: Context) {
@@ -472,10 +486,23 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         // let funcParams = yield * evaluate(funcClosure.node.params, funcClosure)
         // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
         // console.log(node.trailer[0])
+        const functionDecl = yield * evaluate(node.base, context)
+        const funEnvironment = createBlockEnvironment(context, "functionEnvironment")
+        pushEnvironment(context, funEnvironment)
+        
+        const params = yield * evaluate(functionDecl.params, context)
         const args = yield * evaluate(node.trailer[0], context)
-        console.log(args)
-        // const result = yield* apply(context, callee, args, node, thisContext)
-        // return result
+        for (let i = 0;i < args.length;i++){
+          assignVariable(context, params[i], args[i])
+        }
+
+        const result = yield* evaluate(functionDecl.body, context)
+
+
+        //assignVariable(context, id.name, node)
+        
+        
+        return result.value
       }
       // Function Call Specific!
       // const funcEnv = getVariable(context, base.name)
@@ -496,7 +523,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       // while (nreturnExpression.type === 'ConditionalExpression') {
       //   nreturnExpression = yield* evaluate(nreturnExpression, context)
       // }
-      console.log("Return")
+      //console.log("Return")
       return new ReturnValue(yield* evaluate(returnExpression[0], context))
     },
 
@@ -634,3 +661,5 @@ export function* apply(
   }
   return result
 }
+
+export function* applyFunction() {}
