@@ -189,12 +189,12 @@ export interface WhilePythonStatement extends BaseStatement {
 
 export interface GlobalStatement extends BaseStatement {
   type: 'GlobalStatement'
-  globallist: Array<Expression>
+  globallist: Array<String>
 }
 
 export interface NonlocalStatement extends BaseStatement {
   type: 'NonlocalStatement'
-  nonlocallist: Array<Expression>
+  nonlocallist: Array<String>
 }
 
 export interface ImportStatement extends BaseStatement {

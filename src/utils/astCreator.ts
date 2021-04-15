@@ -122,6 +122,24 @@ export const returnStatement = (
   loc
 })
 
+export const globalStatement = (
+  globallist: Array<String>,
+  loc?: ast.SourceLocation | null
+): ast.GlobalStatement => ({
+  type: 'GlobalStatement',
+  globallist,
+  loc
+})
+
+export const nonlocalStatement = (
+  nonlocallist: Array<String>,
+  loc?: ast.SourceLocation | null
+): ast.NonlocalStatement => ({
+  type: 'NonlocalStatement',
+  nonlocallist,
+  loc
+})
+
 export const returnPythonStatement = (
   returned: ast.Expression[],
   loc?: ast.SourceLocation | null
