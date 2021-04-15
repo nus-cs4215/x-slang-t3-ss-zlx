@@ -73,15 +73,35 @@ function traverse(node: TypeAnnotatedNode<ast.Node>, constraints?: Constraint[])
       traverse(node.expression, constraints)
       break
     }
-    case 'BlockStatement':
-      throw Error('Block statements not supported for x-slang')
+    case 'BlockStatement': {
+      node.body.forEach(nodeBody => {
+        traverse(nodeBody, constraints)
+      })
+      break
+    }
     case 'WhileStatement':
-      throw Error('While statements not supported for x-slang')
+      throw Error('For statements not supported for x-slang')
+    case 'WhilePythonStatement':
+      traverse(node.test, constraints)
+      traverse(node.body, constraints)
+      break
+    case 'ForPythonStatement':
+      traverse(node.iter, constraints)
+      node.iterated.forEach(nodeIterated => {
+        traverse(nodeIterated, constraints)
+      })
+      traverse(node.body, constraints)
+      break
     case 'ForStatement':
       throw Error('For statements not supported for x-slang')
     case 'ConditionalExpression': // both cases are the same
     case 'IfStatement':
-      throw Error('If statements not supported for x-slang')
+      traverse(node.test, constraints)
+      traverse(node.consequent, constraints)
+      if (node.alternate) {
+        traverse(node.alternate, constraints)
+      }
+      break
     case 'CallExpression':
       throw Error('Call statements not supported for x-slang')
     case 'ReturnStatement':
@@ -93,9 +113,12 @@ function traverse(node: TypeAnnotatedNode<ast.Node>, constraints?: Constraint[])
     case 'FunctionDeclaration':
       throw Error('Function declarations  not supported for x-slang')
     case 'AssignmentExpression':
-      throw Error('Assignments expressions not supported for x-slang')
+      traverse(node.left, constraints)
+      traverse(node.right, constraints)
+      break
     case 'ArrayExpression':
-      throw Error('Array expressions not supported for x-slang')
+      node.elements.forEach(element => traverse(element, constraints))
+      break
     case 'MemberExpression':
       throw Error('Member expressions not supported for x-slang')
     default:

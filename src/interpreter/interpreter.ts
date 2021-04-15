@@ -1,5 +1,5 @@
 /* tslint:disable:max-classes-per-file */
-// const util = require('util')
+const util = require('util')
 import * as ast from '../parser/ast'
 import * as constants from '../constants'
 import * as errors from '../errors/errors'
@@ -236,7 +236,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     BlockStatement: function* (node: ast.BlockStatement, context: Context) {
       for (let i=0; i< node.body.length - 1; i++){
-        let result = yield * evaluate(node.body[i], context)
+        const result = yield * evaluate(node.body[i], context)
         if (result instanceof ReturnValue ||
           result instanceof TailCallReturnValue ||
           result instanceof BreakValue ||
@@ -438,8 +438,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     TypedargslistExpression: function*(node: ast.TypedargslistExpression, context: Context) {
       if (node.default !== null){
-        let name = yield* evaluate(node.name, context)
-        let de = yield* evaluate(node.default, context)
+        const name = yield* evaluate(node.name, context)
+        const de = yield* evaluate(node.default, context)
         assignVariable(context, name, de)
         return name
       }else{
@@ -464,8 +464,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     ArgumentExpression: function*(node: ast.ArgumentExpression, context: Context){
       if (node.key !== null){
-        let name = yield* evaluate(node.key, context)
-        let value = yield* evaluate(node.value, context)
+        const name = yield* evaluate(node.key, context)
+        const value = yield* evaluate(node.value, context)
         assignVariable(context, name, value)
         return name
       }else{
@@ -482,7 +482,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         return arr[trailer]
       } else if (type === "ArgListExpression") {
         // let funcClosure = getVariable(context, base.name)
-        // console.log(util.inspect(funcClosure, { showHidden: false, depth: null }))
+        console.log(util.inspect(getVariable(context, base.name), { showHidden: false, depth: null }))
         // let funcParams = yield * evaluate(funcClosure.node.params, funcClosure)
         // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
         // console.log(node.trailer[0])

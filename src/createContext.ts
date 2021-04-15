@@ -1,8 +1,10 @@
 // Variable determining chapter of Source is contained in this file.
 
 import { GLOBAL } from './constants'
+import { AsyncScheduler } from './schedulers'
 import * as misc from './stdlib/misc'
 import { Context, CustomBuiltIns, Value, Variant } from './types'
+import { stringify } from './utils/stringify'
 import { createTypeEnvironment, tForAll, tVar } from './typeChecker/typeChecker'
 
 const createEmptyRuntime = () => ({
@@ -12,6 +14,17 @@ const createEmptyRuntime = () => ({
   environments: [],
   value: undefined,
   nodes: []
+})
+
+const createEmptyDebugger = () => ({
+  observers: { callbacks: Array<() => void>() },
+  status: false,
+  state: {
+    it: (function* (): any {
+      return
+    })(),
+    scheduler: new AsyncScheduler()
+  }
 })
 
 const createGlobalEnvironment = () => ({
@@ -34,6 +47,7 @@ export const createEmptyContext = <T>(
     runtime: createEmptyRuntime(),
     numberOfOuterEnvironments: 1,
     prelude: null,
+    debugger: createEmptyDebugger(),
     executionMethod: 'auto',
     variant,
     typeEnvironment: createTypeEnvironment()
@@ -91,6 +105,23 @@ export const importExternalSymbols = (context: Context, externalSymbols: string[
   })
 }
 
+export const importBuiltins = (context: Context, externalBuiltIns: CustomBuiltIns) => {
+  ensureGlobalEnvironmentExist(context)
+  const placeholder = Symbol()
+  const rawDisplay = (v: Value, s: string) =>
+    externalBuiltIns.rawDisplay(v, s, context.externalContext)
+  const display = (v: Value, s: any = placeholder) => {
+    if (s !== placeholder && typeof s !== 'string') {
+      throw new TypeError('display expects the second argument to be a string')
+    }
+    return rawDisplay(stringify(v), s === placeholder ? undefined : s), v
+  }
+  if (context.variant === 'python') {
+    defineBuiltin(context, 'display(val, prepend = undefined)', display)
+    defineBuiltin(context, 'raw_display(str, prepend = undefined)', rawDisplay)
+  }
+}
+
 /**
  * Imports builtins from standard and external libraries.
  */
@@ -114,7 +145,7 @@ const createContext = <T>(
   moduleParams?: any
 ) => {
   const context = createEmptyContext(variant, externalSymbols, externalContext, moduleParams)
-
+  importBuiltins(context, externalBuiltIns)
   importExternalSymbols(context, externalSymbols)
 
   return context

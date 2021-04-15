@@ -91,6 +91,8 @@ export interface Context<T = any> {
 
   /** Runtime Sepecific state */
   runtime: {
+    break: boolean
+    debuggerOn: boolean
     isRunning: boolean
     environments: Environment[]
     nodes: ast.Node[]
@@ -101,6 +103,16 @@ export interface Context<T = any> {
   numberOfOuterEnvironments: number
 
   prelude: string | null
+
+  /** the state of the debugger */
+  debugger: {
+    /** External observers watching this context */
+    status: boolean
+    state: {
+      it: IterableIterator<T>
+      scheduler: Scheduler
+    }
+  }
 
   /**
    * Used for storing external properties.

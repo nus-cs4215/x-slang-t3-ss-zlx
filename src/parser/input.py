@@ -1,10 +1,13 @@
-c = 1
+# c = 1
+# def f(a):
+#     global c
+#     c = c + a
+#     return c
+# b = f(2)
+# rawDisplay(c)
 
-def f(a = 5, c = 4):
-    a = a - 1
-    a = a + c
-    return a
-b = f()
+c = 1
+display(c)
 
 # For Loop
 # a = 0
