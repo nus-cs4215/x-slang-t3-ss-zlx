@@ -362,10 +362,9 @@ class PythonStatementGenerator
   // Visit a parse tree produced by Python3Parser#global_stmt.
   visitGlobal_stmt(ctx: Global_stmtContext): ast.Statement {
     console.log('visitGlobal_stmt')
-    const generator = new PythonExpressionGenerator()
     const globallist = []
     for (let i = 0; i < ctx.NAME().length; i++) {
-      globallist.push(generator.visit(ctx.NAME(i)))
+      globallist.push(ctx.NAME(i).text)
     }
     return { type: 'GlobalStatement', globallist: globallist }
   }
@@ -373,10 +372,9 @@ class PythonStatementGenerator
   // Visit a parse tree produced by Python3Parser#nonlocal_stmt.
   visitNonlocal_stmt(ctx: Nonlocal_stmtContext): ast.Statement {
     console.log('visitNonlocal_stmt')
-    const generator = new PythonExpressionGenerator()
     const nonlocallist = []
     for (let i = 0; i < ctx.NAME().length; i++) {
-      nonlocallist.push(generator.visit(ctx.NAME(i)))
+      nonlocallist.push(ctx.NAME(i).text)
     }
     return { type: 'NonlocalStatement', nonlocallist: nonlocallist }
   }

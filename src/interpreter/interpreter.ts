@@ -1,5 +1,5 @@
 /* tslint:disable:max-classes-per-file */
-const util = require('util')
+// const util = require('util')
 import * as ast from '../parser/ast'
 import * as constants from '../constants'
 import * as errors from '../errors/errors'
@@ -119,6 +119,21 @@ function getVariable(context: Context, name: string) {
 function assignVariable(context: Context, name: string, value: Value) {
   const environment: Environment | null = context.runtime.environments[0]
   environment.head[name] = value
+  return undefined
+}
+
+function assignGlobalVariable(context: Context, name: string, value: Value) {
+  let environment: Environment | null = context.runtime.environments[0]
+  while (environment!.name !== 'programEnvironment') {
+    environment = environment!.tail
+  }
+  environment!.head[name] = value
+  return undefined
+}
+
+function assignNonlocalVariable(context: Context, name: string, value: Value) {
+  const environment: Environment | null = context.runtime.environments[0].tail
+  environment!.head[name] = value
   return undefined
 }
 
@@ -481,27 +496,32 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         const arr = getVariable(context, base.name)
         return arr[trailer]
       } else if (type === "ArgListExpression") {
-        // let funcClosure = getVariable(context, base.name)
-        console.log(util.inspect(getVariable(context, base.name), { showHidden: false, depth: null }))
-        // let funcParams = yield * evaluate(funcClosure.node.params, funcClosure)
-        // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
-        // console.log(node.trailer[0])
         const functionDecl = yield * evaluate(node.base, context)
         const funEnvironment = createBlockEnvironment(context, "functionEnvironment")
         pushEnvironment(context, funEnvironment)
-        
         const params = yield * evaluate(functionDecl.params, context)
         const args = yield * evaluate(node.trailer[0], context)
         for (let i = 0;i < args.length;i++){
           assignVariable(context, params[i], args[i])
         }
-
         const result = yield* evaluate(functionDecl.body, context)
-
-
-        //assignVariable(context, id.name, node)
-        
-        
+        if (context.runtime.environments[0].head.hasOwnProperty("global")){
+          const globallist = context.runtime.environments[0].head["global"];
+          for (let i = 0;i<globallist.length;i++){
+            const name = globallist[i];
+            const value = context.runtime.environments[0].head[name];
+            assignGlobalVariable(context, name, value)
+          }
+        }
+        if (context.runtime.environments[0].head.hasOwnProperty("nonlocal")){
+          const nonlocallist = context.runtime.environments[0].head["nonlocal"];
+          for (let i = 0;i<nonlocallist.length;i++){
+            const name = nonlocallist[i];
+            const value = context.runtime.environments[0].head[name];
+            assignNonlocalVariable(context, name, value)
+          }
+        }
+        popEnvironment(context)
         return result.value
       }
       // Function Call Specific!
@@ -525,6 +545,38 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
       // }
       //console.log("Return")
       return new ReturnValue(yield* evaluate(returnExpression[0], context))
+    },
+
+    GlobalStatement: function* (node: ast.GlobalStatement, context: Context){
+      if (context.runtime.environments[0].head.hasOwnProperty("global")){
+        for (let i = 0; i < node.globallist.length ; i++){
+          const name = node.globallist[i]
+          context.runtime.environments[0].head["global"].push(name)
+        }
+      }else{
+        context.runtime.environments[0].head["global"] = [];
+        for (let i = 0; i < node.globallist.length ; i++){
+          const name = node.globallist[i]
+          context.runtime.environments[0].head["global"].push(name)
+        }
+      }
+      return undefined
+    },
+
+    NonlocalStatement: function* (node: ast.NonlocalStatement, context: Context){
+      if (context.runtime.environments[0].head.hasOwnProperty("nonlocal")){
+        for (let i = 0; i < node.nonlocallist.length ; i++){
+          const name = node.nonlocallist[i]
+          context.runtime.environments[0].head["nonlocal"].push(name)
+        }
+      }else{
+        context.runtime.environments[0].head["nonlocal"] = [];
+        for (let i = 0; i < node.nonlocallist.length ; i++){
+          const name = node.nonlocallist[i]
+          context.runtime.environments[0].head["nonlocal"].push(name)
+        }
+      }
+      return undefined
     },
 
     // HERE

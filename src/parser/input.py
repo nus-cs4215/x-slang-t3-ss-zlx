@@ -1,14 +1,35 @@
-# c = 1
+a = 1
+
+def f():
+    a = 7
+    def g():
+        nonlocal a
+        a = 5
+        def e():
+            nonlocal a
+            a = 3
+        e()
+    g()
+    return a
+f()
+
+
+
+# c = 3
+
 # def f(a):
-#     global c
-#     c = c + a
-#     return c
-# b = f(2)
-# rawDisplay(c)
+#     c = a
 
-c = 1
-display(c)
+# f(4)
+# c
 
+# def fac(n):
+#     if n == 0:
+#         return 1
+#     else:
+#         return n * fac(n - 1)
+
+# a = fac(5)
 # For Loop
 # a = 0
 # arr = [1, 2, 3]
