@@ -1,6 +1,20 @@
 import { Context, Value } from '../types'
 import { stringify } from '../utils/stringify'
 
+export function print(value: Value) {
+  console.log(value)
+  return value
+}
+
+export function range(start: number, stop: number) {
+  let i = (start === undefined) ? 0 : start
+  let arr = []
+  for(i; i<stop; i++){
+    arr.push(i)
+  }
+  return arr
+}
+
 /**
  * A function that displays to console.log by default (for a REPL).
  *
@@ -8,6 +22,7 @@ import { stringify } from '../utils/stringify'
  * @param externalContext a property of Context that can hold
  *   any information required for external use (optional).
  */
+
 export function rawDisplay(value: Value, str: string, externalContext: any) {
   // tslint:disable-next-line:no-console
   console.log((str === undefined ? '' : str + ' ') + value.toString())

@@ -116,9 +116,15 @@ export const importBuiltins = (context: Context, externalBuiltIns: CustomBuiltIn
     }
     return rawDisplay(stringify(v), s === placeholder ? undefined : s), v
   }
+  const print = (v : Value) => 
+    externalBuiltIns.print(v)
+  const range = (start: number, stop: number) =>
+    externalBuiltIns.range(start, stop)
   if (context.variant === 'python') {
     defineBuiltin(context, 'display(val, prepend = undefined)', display)
     defineBuiltin(context, 'raw_display(str, prepend = undefined)', rawDisplay)
+    defineBuiltin(context, 'print(val)', print)
+    defineBuiltin(context, 'range(start, stop)', range)
   }
 }
 
@@ -128,7 +134,9 @@ export const importBuiltins = (context: Context, externalBuiltIns: CustomBuiltIn
 
 const defaultBuiltIns: CustomBuiltIns = {
   rawDisplay: misc.rawDisplay,
+  print: misc.print,
   // See issue #5
+  range: misc.range,
   prompt: misc.rawDisplay,
   // See issue #11
   alert: misc.rawDisplay,

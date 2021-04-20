@@ -15,6 +15,8 @@ import * as ast from './parser/ast'
  */
 export interface CustomBuiltIns {
   rawDisplay: (value: Value, str: string, externalContext: any) => Value
+  print: (str: Value) => Value
+  range: (start: number, stop: number) => Value[]
   prompt: (value: Value, str: string, externalContext: any) => string | null
   alert: (value: Value, str: string, externalContext: any) => void
   /* Used for list visualisation. See #12 */

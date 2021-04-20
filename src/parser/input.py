@@ -1,19 +1,19 @@
-a = 1
+# a = 1
 
-def f():
-    a = 7
-    def g():
-        nonlocal a
-        a = 5
-        def e():
-            nonlocal a
-            a = 3
-        e()
-    g()
-    return a
-f()
-
-
+# def f():
+#     a = 7
+#     def g():
+#         nonlocal a
+#         a = 5
+#         def e():
+#             nonlocal a
+#             a = 3
+#         e()
+#     g()
+#     return a
+# f()
+for i in range(0, 5):
+    print(i)
 
 # c = 3
 

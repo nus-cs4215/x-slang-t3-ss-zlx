@@ -14,6 +14,7 @@ import {
 } from '../utils/operators'
 import * as rttc from '../utils/rttc'
 import Closure from './closure'
+import * as misc from '../stdlib/misc'
 // import { update } from 'lodash'
 // import { constant } from 'lodash'
 // import { stat } from 'fs'
@@ -407,7 +408,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     ForPythonStatement: function*(node: ast.ForPythonStatement, context: Context) {
       // Create a new block scope for the loop variables
       const iter = (node.iter as ast.Identifier).name
-      const iterated = getVariable(context, (node.iterated[0] as ast.Identifier).name)
+      const iterated = yield * evaluate(node.iterated[0], context)
       let value
       for(let i =0; i < iterated.length; i++) {
         const iterValue = iterated[i]
@@ -495,7 +496,14 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         const trailer = yield * evaluate(node.trailer[0], context)
         const arr = getVariable(context, base.name)
         return arr[trailer]
-      } else if (type === "ArgListExpression") {
+      } else if(base.name == "print") {
+        const args = yield * evaluate(node.trailer[0], context)
+        return misc.print(args[0])
+      } else if(base.name == "range") {
+        const args = yield * evaluate(node.trailer[0], context)
+        return misc.range(args[0], args[1])
+      }
+      else if (type === "ArgListExpression") {
         const functionDecl = yield * evaluate(node.base, context)
         const funEnvironment = createBlockEnvironment(context, "functionEnvironment")
         pushEnvironment(context, funEnvironment)
@@ -524,26 +532,10 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         popEnvironment(context)
         return result.value
       }
-      // Function Call Specific!
-      // const funcEnv = getVariable(context, base.name)
-      // // const funcParams = yield * evaluate(node.trailer[0], context)
-      // const funcArgs = yield * evaluate(node.trailer[0], context)
-      // console.log("Environment:")
-      // console.log(util.inspect(funcEnv, { showHidden: false, depth: null }))
-      // console.log("Params:")
-      // // console.log(util.inspect(funcParams, { showHidden: false, depth: null }))
-      // console.log("Args:")
-      // console.log(util.inspect(funcArgs, { showHidden: false, depth: null }))
     },
 
     ReturnPythonStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
       const returnExpression = node.argument!
-      // let nreturnExpression = returnExpression[0]
-      // // If we have a conditional expression, reduce it until we get something else
-      // while (nreturnExpression.type === 'ConditionalExpression') {
-      //   nreturnExpression = yield* evaluate(nreturnExpression, context)
-      // }
-      //console.log("Return")
       return new ReturnValue(yield* evaluate(returnExpression[0], context))
     },
 
