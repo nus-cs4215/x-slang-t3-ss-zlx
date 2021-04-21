@@ -109,7 +109,7 @@ import { IntegerContext } from '../lang/Python3Parser'
 // import { RuleNode } from 'antlr4ts/tree/RuleNode'
 // import { TerminalNode } from 'antlr4ts/tree/TerminalNode'
 import { AbstractParseTreeVisitor } from 'antlr4ts/tree/AbstractParseTreeVisitor'
-import { readFileSync } from 'fs'
+// import { readFileSync } from 'fs'
 
 export class DisallowedConstructError implements SourceError {
   public type = ErrorType.SYNTAX
@@ -1858,7 +1858,7 @@ function convertSource(expression: File_inputContext): ast.Program {
 
 export function parse(source: string, context: Context) {
   let program: ast.Program | undefined
-  source = readFileSync('src/parser/input.py', 'utf-8')
+  // source = readFileSync('src/parser/input.py', 'utf-8')
   if (context.variant === 'python') {
     const inputStream = new ANTLRInputStream(source)
     const lexer = new Python3Lexer(inputStream)

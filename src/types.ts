@@ -14,9 +14,9 @@ import * as ast from './parser/ast'
  * different implementations. e.g display() in a web application.
  */
 export interface CustomBuiltIns {
-  rawDisplay: (value: Value, str: string, externalContext: any) => Value
-  print: (str: Value) => Value
+  print: (val: Value, externalContext: any) => Value
   range: (start: number, stop: number) => Value[]
+  rawDisplay: (value: Value, str: string, externalContext: any) => Value
   prompt: (value: Value, str: string, externalContext: any) => string | null
   alert: (value: Value, str: string, externalContext: any) => void
   /* Used for list visualisation. See #12 */

@@ -1,15 +1,15 @@
 import { Context, Value } from '../types'
 import { stringify } from '../utils/stringify'
 
-export function print(value: Value) {
+export function print(value: Value, externalContext: any) {
   console.log(value)
   return value
 }
 
 export function range(start: number, stop: number) {
-  let i = (start === undefined) ? 0 : start
-  let arr = []
-  for(i; i<stop; i++){
+  let i = start === undefined ? 0 : start
+  const arr = []
+  for (i; i < stop; i++) {
     arr.push(i)
   }
   return arr

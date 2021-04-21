@@ -498,7 +498,7 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         return arr[trailer]
       } else if(base.name == "print") {
         const args = yield * evaluate(node.trailer[0], context)
-        return misc.print(args[0])
+        return misc.print(args[0], context)
       } else if(base.name == "range") {
         const args = yield * evaluate(node.trailer[0], context)
         return misc.range(args[0], args[1])

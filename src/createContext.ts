@@ -4,7 +4,6 @@ import { GLOBAL } from './constants'
 import { AsyncScheduler } from './schedulers'
 import * as misc from './stdlib/misc'
 import { Context, CustomBuiltIns, Value, Variant } from './types'
-import { stringify } from './utils/stringify'
 import { createTypeEnvironment, tForAll, tVar } from './typeChecker/typeChecker'
 
 const createEmptyRuntime = () => ({
@@ -107,22 +106,9 @@ export const importExternalSymbols = (context: Context, externalSymbols: string[
 
 export const importBuiltins = (context: Context, externalBuiltIns: CustomBuiltIns) => {
   ensureGlobalEnvironmentExist(context)
-  const placeholder = Symbol()
-  const rawDisplay = (v: Value, s: string) =>
-    externalBuiltIns.rawDisplay(v, s, context.externalContext)
-  const display = (v: Value, s: any = placeholder) => {
-    if (s !== placeholder && typeof s !== 'string') {
-      throw new TypeError('display expects the second argument to be a string')
-    }
-    return rawDisplay(stringify(v), s === placeholder ? undefined : s), v
-  }
-  const print = (v : Value) => 
-    externalBuiltIns.print(v)
-  const range = (start: number, stop: number) =>
-    externalBuiltIns.range(start, stop)
+  const print = (v: Value) => externalBuiltIns.print(v, context.externalContext)
+  const range = (start: number, stop: number) => externalBuiltIns.range(start, stop)
   if (context.variant === 'python') {
-    defineBuiltin(context, 'display(val, prepend = undefined)', display)
-    defineBuiltin(context, 'raw_display(str, prepend = undefined)', rawDisplay)
     defineBuiltin(context, 'print(val)', print)
     defineBuiltin(context, 'range(start, stop)', range)
   }
