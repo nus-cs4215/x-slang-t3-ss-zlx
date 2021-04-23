@@ -38,7 +38,7 @@ Read our full Developer Guide: [T3 Python Developer Guide](https://github.com/nu
 This page outlines our work done so far in implementing the Python 3 programming language in Typescript. This documentation serves as the User Manual for our project and contains various examples of what we have implemented thus far. For a more detailed discussion about our implementation logic, take a look at our Wiki.
 
 Read our full Developer Guide: [T3 Python Developer Guide](https://github.com/nus-cs4215/x-slang-t3-ss-zlx/wiki) <br/>
-Source Code for the X-Frontend: [x-frontend-ts-ss-zlx](https://github.com/nus-cs4215/x-frontend-t3-ss-zlx)
+Source Code for the X-Frontend: [x-frontend-ts-ss-zlx](https://github.com/nus-cs4215/x-frontend-t3-ss-zlx) <br/>
 Slide Deck from our presentation: [T3 Python Presentation Slides](https://github.com/nus-cs4215/x-slang-t3-ss-zlx/blob/master/T3%20Python%20Presentation.pdf)
 
 ## Why Python?
