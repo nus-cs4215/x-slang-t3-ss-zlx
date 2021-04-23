@@ -1,3 +1,128 @@
+# T3 Python 
+
+## Python 3 implemented in Typescript
+This page outlines our work done so far in implementing the Python 3 programming language in Typescript. This documentation covers the key considerations taken when building the Parser using the Antlr tool, some noteworthy features of Python 3 that we have covered in our interpreter, and example use cases.
+
+Source Code for the X-Frontend: [x-frontend-ts-ss-zlx](https://github.com/nus-cs4215/x-frontend-t3-ss-zlx)
+
+## Why Python?
+As one of the most popular programming languages in the world, Python provides a lot of benefits to programming novices and experts alike. Through implementing the language's basic grammar and some of its most commonly used standard library functions, our team has a depper understanding and appreciation for Python.
+
+## The Parser
+This section details the 
+
+## The Interpreter
+This section details the implementation logic of key components of the Python 3 grammar that we have implemented in our project. 
+
+### Python Keywords
+There are two keywords implemented in Python in order to define the scope of variables. These keywords are used inside of functions. This section will detail the use of these keywords and our implementation logic.
+
+#### `global` Keyword
+The `global` keyword allows you to modify the variable outside of the current scope, i.e. the function body scope It is used to create a global variable and make changes to the variable in a local context, which changes the value of the variable globally.
+
+Example:
+``` python
+    c = 1
+    def add():
+        global c
+        c = c + 2
+    add()
+    print(c)
+```
+The logic we have used to implement this keyword is as follows:
+1. Assign variable names inside globallist (which is inside the Program Frame) as local list variable “global” in current frame
+2. Check local variable “global” before function finishes
+3. If the list “global” exists ->  Copy the names and their values in the list “global” into Program Frame
+4. If the list “global” does not exist -> Pass
+
+#### `nonlocal` Keyword
+In Python the `nonlocal` keyword is used for variables in nested functions whose local scope is not defined. This means that the variable can be neither in the local (the current scope) nor the global scope (the Program scope).
+
+Example:
+``` python
+        a = 1
+        def f():
+            a = 7
+            def g():
+                nonlocal a
+                a = 5
+                def e():
+                    nonlocal a
+                    a = 3
+                e()
+            g()
+            return a
+        f()
+```
+The logic we have used to implement this keyword is as follows:
+
+1. Assign variable names in nonlocallist as local list variable “nonlocal” in current frame
+2. Check local variable “nonlocal” before function finishes
+3. List “nonlocal” exists ->  Copy the names and their values into tail frame
+4. List “nonlocal” not exists -> Pass
+
+### Python Built-in Functions
+We have implemented two very commonly used built-in functions for Python - `print` and `range`. To implement these we took note of how standard library functions are implemented in *js-slang* to guide us.
+
+#### `print` Function
+The implementation of the print function involves evaluation the argument list of the function. Then the returned value is printed using  `console.log` and returned as the return value. 
+
+Examples:
+``` python
+    print("Hello, World")
+
+    print(1 + 2)
+
+    a = 1
+    print(a)
+```
+
+#### `range` Function
+The `range` function in python takes in a stop value as a required value and an optional start and step values in order to return a list of numbers. If the stop is not specified it defaults to 0 and if the step is not specified it defaults to 1.
+
+In our implementation we have altered this function slightly in order to take in 2 required fields: the start and the stop.
+
+Examples:
+``` python
+    print(range(0, 5))
+    >>> [0, 1, 2, 3, 4]
+
+    for i in range(1, 6):
+        do something...
+```
+
+### Python For Loops 
+The Python `for` loops are slightly different to the Javascript `for` loops, and bear more resemblance to the JS `forEach` function. <br/>
+Essentially Python for loops consist of an iterator, an interated value and finally the for loop body. In every iteration of the for loop body, the iterator takes on the next value of the iterated and the loop body is performed. The final value of the iterator is retained in the current environment frame. 
+
+Examples:
+
+```python
+    arr = [1, 2, 3, 4, 5]
+    for i in arr:
+        do something...
+    
+    for i in range(1, 6):
+        do something...
+```
+
+### Python Built-in Datastructures: Lists & Dictionaries
+We have implemented two of the basic Python built-in datastructures - lists and dictionaries.
+
+Examples:
+```python
+    arr = [1, 2, 3, 4]
+    print(arr[2])
+
+    dictionary = {
+        "hello": "Hello, World!",
+        "bye": "Goodbye!"
+    }
+    print(dictionary["hello"])
+```
+
+Running the Project
+=====
 Open-source implementations of the programming language *Source*. Source
 is a series of small subsets of JavaScript, designed for teaching
 university-level programming courses for computer science majors,

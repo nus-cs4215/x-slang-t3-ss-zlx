@@ -498,7 +498,11 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         return arr[trailer]
       } else if(base.name == "print") {
         const args = yield * evaluate(node.trailer[0], context)
-        return misc.print(args[0], context)
+        let returnValue = ""
+        for(let i = 0; i < args.length; i++){
+          returnValue = returnValue + (misc.print(args[i], context)).toString() + " "
+        }
+        return returnValue.trim()
       } else if(base.name == "range") {
         const args = yield * evaluate(node.trailer[0], context)
         return misc.range(args[0], args[1])
@@ -536,7 +540,11 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
 
     ReturnPythonStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
       const returnExpression = node.argument!
-      return new ReturnValue(yield* evaluate(returnExpression[0], context))
+      let returnValues = []
+      for(let i = 0; i < returnExpression.length; i++){
+        returnValues.push(yield* evaluate(returnExpression[i], context))
+      }
+      return new ReturnValue(returnValues)
     },
 
     GlobalStatement: function* (node: ast.GlobalStatement, context: Context){
