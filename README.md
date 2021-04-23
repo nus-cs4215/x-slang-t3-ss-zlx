@@ -39,6 +39,7 @@ This page outlines our work done so far in implementing the Python 3 programming
 
 Read our full Developer Guide: [T3 Python Developer Guide](https://github.com/nus-cs4215/x-slang-t3-ss-zlx/wiki) <br/>
 Source Code for the X-Frontend: [x-frontend-ts-ss-zlx](https://github.com/nus-cs4215/x-frontend-t3-ss-zlx)
+Slide Deck from our presentation: [T3 Python Presentation Slides](https://github.com/nus-cs4215/x-slang-t3-ss-zlx/blob/master/T3%20Python%20Presentation.pdf)
 
 ## Why Python?
 As one of the most popular programming languages in the world, Python provides a lot of benefits to programming novices and experts alike. Through implementing the language's basic grammar and some of its most commonly used standard library functions, our team has a deepper understanding and appreciation for Python.
