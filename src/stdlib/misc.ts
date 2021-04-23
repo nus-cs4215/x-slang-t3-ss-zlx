@@ -1,6 +1,46 @@
 import { Context, Value } from '../types'
 import { stringify } from '../utils/stringify'
 
+export function print(value: Value, externalContext: any) {
+  console.log(value)
+  return value
+}
+
+export function env(environment: any) {
+  const returnEnv = {}
+  let env = environment.runtime.environments[0]
+  while (env.name !== 'global') {
+    let funcName = ''
+    if (env.name !== 'programEnvironment') {
+      funcName = env.name.replace('functionEnvironment', '')
+    } else {
+      funcName = 'program'
+    }
+    const funcEnv = {}
+    for (const [key, value] of Object.entries(env.head)) {
+      if (value instanceof Object) {
+        if (value['type'] === 'FunctionPythonDeclaration') {
+          funcEnv[key] = 'function declaration'
+        }
+      } else if (key !== 'func') {
+        funcEnv[key] = value
+      }
+    }
+    returnEnv[funcName] = funcEnv
+    env = env.tail
+  }
+  return returnEnv
+}
+
+export function range(start: number, stop: number) {
+  let i = start === undefined ? 0 : start
+  const arr = []
+  for (i; i < stop; i++) {
+    arr.push(i)
+  }
+  return arr
+}
+
 /**
  * A function that displays to console.log by default (for a REPL).
  *
@@ -8,6 +48,7 @@ import { stringify } from '../utils/stringify'
  * @param externalContext a property of Context that can hold
  *   any information required for external use (optional).
  */
+
 export function rawDisplay(value: Value, str: string, externalContext: any) {
   // tslint:disable-next-line:no-console
   console.log((str === undefined ? '' : str + ' ') + value.toString())

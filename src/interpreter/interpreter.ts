@@ -1,6 +1,6 @@
 /* tslint:disable:max-classes-per-file */
+// const util = require('util')
 import * as ast from '../parser/ast'
-// import * as es from 'estree'
 import * as constants from '../constants'
 import * as errors from '../errors/errors'
 import { RuntimeSourceError } from '../errors/runtimeSourceError'
@@ -9,11 +9,14 @@ import { Context, Environment, Frame, Value } from '../types'
 import { primitive } from '../utils/astCreator'
 import {
   evaluateBinaryExpression,
-  // evaluateConditionalExpression,
+  evaluateConditionalExpression,
   evaluateUnaryExpression
 } from '../utils/operators'
 import * as rttc from '../utils/rttc'
 import Closure from './closure'
+import * as misc from '../stdlib/misc'
+// import { update } from 'lodash'
+// import { constant } from 'lodash'
 // import { stat } from 'fs'
 
 class BreakValue {}
@@ -53,6 +56,7 @@ function* forceIt(val: any, context: Context): Value {
 export function* actualValue(exp: ast.Node, context: Context): Value {
   const evalResult = yield* evaluate(exp, context)
   const forced = yield* forceIt(evalResult, context)
+  // console.log(forced)
   return forced
 }
 
@@ -72,10 +76,12 @@ const createEnvironment = (
       arguments: args.map(primitive)
     }
   }
-  closure.node.params.forEach((param, index) => {
-    const ident = param as ast.Identifier
-    environment.head[ident.name] = args[index]
-  })
+  if (closure.node.type !== 'FunctionPythonDeclaration') {
+    closure.node.params.forEach((param, index) => {
+      const ident = param as ast.Identifier
+      environment.head[ident.name] = args[index]
+    })
+  }
   return environment
 }
 
@@ -99,11 +105,38 @@ const handleRuntimeError = (context: Context, error: RuntimeSourceError): never 
   throw error
 }
 
-// function assignName(context: Context, name: string, value: Value) {
-//   const environment = currentEnvironment(context)
-//   environment.head[name] = value
-//   return environment
-// }
+function getVariable(context: Context, name: string) {
+  let environment: Environment | null = context.runtime.environments[0]
+  while (environment) {
+    if (environment.head.hasOwnProperty(name)) {
+      return environment.head[name]
+    } else {
+      environment = environment.tail
+    }
+  }
+  return handleRuntimeError(context, new errors.UndefinedVariable(name, context.runtime.nodes[0]))
+}
+
+function assignVariable(context: Context, name: string, value: Value) {
+  const environment: Environment | null = context.runtime.environments[0]
+  environment.head[name] = value
+  return undefined
+}
+
+function assignGlobalVariable(context: Context, name: string, value: Value) {
+  let environment: Environment | null = context.runtime.environments[0]
+  while (environment!.name !== 'programEnvironment') {
+    environment = environment!.tail
+  }
+  environment!.head[name] = value
+  return undefined
+}
+
+function assignNonlocalVariable(context: Context, name: string, value: Value) {
+  const environment: Environment | null = context.runtime.environments[0].tail
+  environment!.head[name] = value
+  return undefined
+}
 
 const DECLARED_BUT_NOT_YET_ASSIGNED = Symbol('Used to implement hoisting')
 
@@ -164,7 +197,10 @@ const checkNumberOfArguments = (
   exp: ast.CallExpression
 ) => {
   if (callee instanceof Closure) {
-    if (callee.node.params.length !== args.length) {
+    if (
+      callee.node.type !== 'FunctionPythonDeclaration' &&
+      callee.node.params.length !== args.length
+    ) {
       return handleRuntimeError(
         context,
         new errors.InvalidNumberOfArguments(exp, callee.node.params.length, args.length)
@@ -212,49 +248,62 @@ function* evaluateBlockSatement(context: Context, node: ast.BlockStatement) {
  */
 // tslint:disable:object-literal-shorthand
 // prettier-ignore
-export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
+export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {  
 
     BlockStatement: function* (node: ast.BlockStatement, context: Context) {
       for (let i=0; i< node.body.length - 1; i++){
-        yield * evaluate(node.body[i], context)
+        const result = yield * evaluate(node.body[i], context)
+        if (result instanceof ReturnValue ||
+          result instanceof TailCallReturnValue ||
+          result instanceof BreakValue ||
+          result instanceof ContinueValue){
+            return result
+        }
       } 
       return yield * evaluate(node.body[node.body.length - 1], context)
     },
-    
-    /** Simple Values */
-    // Number: function* (node: ast.Number, context: Context) {
-    //   return node.value
-    // },
-
-    // Bool: function* (node: ast.Bool, context: Context) {
-    //   return node.value
-    // },
-
-    // String: function* (node: ast.String, context: Context) {
-    //   return node.value
-    // },
 
     Literal: function*(node: ast.Literal, context: Context) {
         return node.value
     },
 
-    // TemplateLiteral: function*(node: es.TemplateLiteral) {
-    //     // Expressions like `${1}` are not allowed, so no processing needed
-    //     return node.quasis[0].value.cooked
-    // },
+    Identifier: function*(node: ast.Identifier, context: Context) {
+      return getVariable(context, node.name)
+    },
+
+    ExpressionStatement: function*(node: ast.ExpressionStatement, context: Context) {
+      return yield* evaluate(node.expression, context)
+    },
+
+    SequenceExpression: function*(node: ast.SequenceExpression, context: Context) {
+      const length = node.expressions.length
+      if (length > 1){
+        const returnArray = []
+        for (let i = 0; i < length -1; i++) {
+          returnArray.push(yield * evaluate(node.expressions[i], context))
+        }
+        return returnArray
+      } else {
+        return yield * evaluate(node.expressions[0], context)
+      }
+    },
 
     ArrayExpression: function*(node: ast.ArrayExpression, context: Context) {
-        throw new Error("Array expressions not supported in x-slang");
+        const elements = node.elements
+        const returnArr = []
+        for(let i = 0; i < elements.length; i++){
+          returnArr.push(yield * evaluate(elements[i], context))
+        }
+        return returnArr 
+    },
+
+    SubscriptListExpression: function*(node: ast.SubscriptListExpression, context: Context) {
+      return yield * evaluate(node.body[0], context)
     },
 
     // STRETCH GOAL
     // DebuggerStatement: function*(node: es.DebuggerStatement, context: Context) {
     //     yield
-    // },
-
-    // Name: function*(node: ast.Name, context: Context) {
-    //     const environment = currentEnvironment(context)
-    //     return environment.head[node.name]
     // },
 
     UnaryExpression: function*(node: ast.UnaryExpression, context: Context) {
@@ -268,8 +317,8 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     },
 
     BinaryExpression: function*(node: ast.BinaryExpression, context: Context) {
-        const left = yield* actualValue(node.left, context)
-        const right = yield* actualValue(node.right, context)
+        const left = yield* evaluate(node.left, context)
+        const right = yield* evaluate(node.right, context)
         const error = rttc.checkBinaryExpression(node, node.operator, left, right)
         if (error) {
             return handleRuntimeError(context, error)
@@ -277,60 +326,269 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         return evaluateBinaryExpression(node.operator, left, right)
     },
 
-    // ConditionalExpression: function*(node: ast.ConditionalExpression, context: Context) {
-    //     const judge = yield* actualValue(node.judge, context)
-    //     const judgeTrue = yield* actualValue(node.judge_true, context)
-    //     const judgeFalse = yield* actualValue(node.judge_false, context)
-    //     const error = rttc.checkConditionalExpression(node, judge, judgeTrue, judgeFalse)
-    //     if (error) {
-    //         return handleRuntimeError(context, error)
-    //     }
-    //     return evaluateConditionalExpression(judge, judgeTrue, judgeFalse)
-    // },
-
-    // // AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
-    // //   const value = yield* actualValue(node.right, context)
-    // //   const symbol = node.left.name
-    // //   assignName(context, symbol, value)
-    // //   return value
-    // },
-
-    WhileStatement: function*(node: ast.WhileStatement, context: Context) {
-      throw new Error("While statements not supported in x-slang");
-      // const condition = yield* actualValue(node.condition.value.element, context)
-      // Need to recursively check whether condition is satisfied HERE
-      // return condition ? evaluate(node.body, context) : null;
+    ConditionalExpression: function*(node: ast.ConditionalExpression, context: Context) {
+        const test = yield* evaluate(node.test, context)
+        const consequent = yield* evaluate(node.consequent, context)
+        const alternate = yield* evaluate(node.alternate, context)
+        const error = rttc.checkConditionalExpression(node, test, consequent, alternate)
+        if (error) {
+            return handleRuntimeError(context, error)
+        }
+        return evaluateConditionalExpression(test, consequent, alternate)
     },
 
-    ForStatement: function*(node: ast.ForStatement, context: Context) {
+    IfStatement: function*(node: ast.IfStatement, context: Context) {
+      const test = yield* evaluate(node.test, context)
+      const error = rttc.checkIfStatement(node, test)
+      if (error) {
+        return handleRuntimeError(context, error)
+      }
+      return test ? yield * evaluate(node.consequent, context) : yield * evaluate(node.alternate!, context)
+    },
+
+    EmptyStatement: function*(node: ast.EmptyStatement, context: Context){},
+
+    PassStatement: function*(node: ast.PassStatement, context: Context){},
+
+    AssignmentExpression: function*(node: ast.AssignmentExpression, context: Context) {
+      const id = node.left as ast.Identifier
+      const value = yield* evaluate(node.right, context)
+      assignVariable(context, id.name, value)
+      return value
+    },
+
+    WhilePythonStatement: function*(node: ast.WhilePythonStatement, context: Context) {
+      let value: any // tslint:disable-line
+      while (yield* evaluate(node.test, context)) {
+        value = yield* evaluate(node.body, context)
+        if (value instanceof ContinueValue) {
+          value = undefined
+          continue
+        }
+        if (value instanceof BreakValue) {
+          value = undefined
+          break
+        }
+        if (value instanceof ReturnValue || value instanceof TailCallReturnValue) {
+          break
+        }
+      }
+
+      if (node.els.type === 'PassStatement'){
+        return value
+      }else {
+        return yield* evaluate(node.body, context)
+      }
+    },
+
+    ContinueStatement: function*(node: ast.ContinueStatement, context: Context) {
+      return new ContinueValue()
+    },
+  
+    BreakStatement: function*(node: ast.BreakStatement, context: Context) {
+      return new BreakValue()
+    },
+
+    KeyValueExpression: function*(node: ast.KeyValueExpression, context: Context){
+      const key = yield * evaluate(node.key, context)
+      const val = yield * evaluate(node.value, context)
+      return [key, val]
+    },
+
+    DictExpression: function*(node: ast.DictExpression, context: Context){
+      const elements = node.elements
+      const returnDict = {}
+      for(let i=0; i < elements.length; i++){
+        const keyValue = yield * evaluate(elements[i], context)
+        returnDict[keyValue[0]] = keyValue[1]
+      }
+      return returnDict
+    },
+
+    ForPythonStatement: function*(node: ast.ForPythonStatement, context: Context) {
       // Create a new block scope for the loop variables
-      throw new Error("For statements not supported in x-slang");
+      const iter = (node.iter as ast.Identifier).name
+      const iterated = yield * evaluate(node.iterated[0], context)
+      let value
+      for(let i =0; i < iterated.length; i++) {
+        const iterValue = iterated[i]
+        assignVariable(context, iter, iterValue)
+        value = yield* evaluate(node.body, context)
+        if (value instanceof ContinueValue) {
+          value = undefined
+          continue
+        }
+        if (value instanceof BreakValue) {
+          value = undefined
+          break
+        }
+        if (value instanceof ReturnValue || value instanceof TailCallReturnValue) {
+          break
+        }
+      }
+      if (node.els.type === 'PassStatement'){
+        return value
+      }else {
+        return yield* evaluate(node.body, context)
+      }
     },
 
-    // STRETCH GOAL
-    // ContinueStatement: function*(node: es.ContinueStatement, context: Context) {
-    //     throw new Error("Continue statements not supported in x-slang");
-    // },
+    FunctionPythonDeclaration: function*(node: ast.FunctionPythonDeclaration, context: Context) {
+      // console.log("Function")
+      const id = node.id as ast.Identifier
+      // tslint:disable-next-line:no-any
+      //const closure = new Closure(node, currentEnvironment(context), context)
+      assignVariable(context, id.name, node)
+      // console.log(util.inspect(context, { showHidden: false, depth: null }))
+      return undefined
+    },
 
-    // STRETCH GOAL
-    // BreakStatement: function*(node: es.BreakStatement, context: Context) {
-    //     throw new Error("Break statements not supported in x-slang");
-    // },
+    ParameterExpression: function*(node: ast.ParameterExpression, context: Context) {
+      const expressions = node.expressions
+      const returnArray = []
+      for (let i=0; i < expressions.length; i++){
+        returnArray.push(yield * evaluate(expressions[i], context))
+      }
+      return returnArray
+    },
 
-    FunctionDeclaration: function*(node: ast.FunctionDeclaration, context: Context) {
-      throw new Error("Function declarations not supported in x-slang");
+    TypedargslistExpression: function*(node: ast.TypedargslistExpression, context: Context) {
+      if (node.default !== null){
+        const name = yield* evaluate(node.name, context)
+        const de = yield* evaluate(node.default, context)
+        assignVariable(context, name, de)
+        return name
+      }else{
+        return yield* evaluate(node.name, context)
+      }
+    },
 
-      // return yield* evaluate(funcDeclToConstDecl, context)
+    ArgListExpression: function*(node: ast.ArgListExpression, context: Context) {
+      const body = node.body
+      const returnArray = []
+      //if (body.length != 1) {
+      for(let i=0; i < body.length; i++){
+        const value = yield * evaluate(body[i], context)
+        returnArray.push(value)
+      }
+      return returnArray
+     // } else {
+      //  return yield * evaluate(body[0], context)
+     // }
+      
+    },
+
+    ArgumentExpression: function*(node: ast.ArgumentExpression, context: Context){
+      if (node.key !== null){
+        const name = yield* evaluate(node.key, context)
+        const value = yield* evaluate(node.value, context)
+        assignVariable(context, name, value)
+        return name
+      }else{
+        return yield * evaluate(node.value, context)
+      }
+    },
+
+    TrailerExpression: function*(node: ast.TrailerExpression, context: Context) {
+      const base = node.base as ast.Identifier
+      const type = node.trailer[0].type
+      if (type === "SubscriptListExpression") {
+        const trailer = yield * evaluate(node.trailer[0], context)
+        const arr = getVariable(context, base.name)
+        return arr[trailer]
+      } else if(base.name == "print") {
+        const args = yield * evaluate(node.trailer[0], context)
+        let returnValue = ""
+        for(let i = 0; i < args.length; i++){
+          returnValue = returnValue + (misc.print(args[i], context)).toString() + " "
+        }
+        return returnValue.trim()
+      } else if(base.name == "range") {
+        const args = yield * evaluate(node.trailer[0], context)
+        return misc.range(args[0], args[1])
+      } else if(base.name == "env") {
+        return misc.env(context)
+      }
+      else if (type === "ArgListExpression") {
+        const functionDecl = yield * evaluate(node.base, context)
+        const funEnvironment = createBlockEnvironment(context, base.name.concat("functionEnvironment"))
+        pushEnvironment(context, funEnvironment)
+        const params = yield * evaluate(functionDecl.params, context)
+        const args = yield * evaluate(node.trailer[0], context)
+        for (let i = 0;i < args.length;i++){
+          assignVariable(context, params[i], args[i])
+        }
+        const result = yield* evaluate(functionDecl.body, context)
+        if (context.runtime.environments[0].head.hasOwnProperty("global")){
+          const globallist = context.runtime.environments[0].head["global"];
+          for (let i = 0;i<globallist.length;i++){
+            const name = globallist[i];
+            const value = context.runtime.environments[0].head[name];
+            assignGlobalVariable(context, name, value)
+          }
+        }
+        if (context.runtime.environments[0].head.hasOwnProperty("nonlocal")){
+          const nonlocallist = context.runtime.environments[0].head["nonlocal"];
+          for (let i = 0;i<nonlocallist.length;i++){
+            const name = nonlocallist[i];
+            const value = context.runtime.environments[0].head[name];
+            assignNonlocalVariable(context, name, value)
+          }
+        }
+        popEnvironment(context)
+        return result.value
+      }
+    },
+
+    ReturnPythonStatement: function*(node: ast.ReturnPythonStatement, context: Context) {
+      const returnExpression = node.argument!
+      if (returnExpression.length == 1){
+        return new ReturnValue(yield* evaluate(returnExpression[0], context))
+      } else {
+      const returnValues = []
+      for(let i = 0; i < returnExpression.length; i++){
+        returnValues.push(yield* evaluate(returnExpression[i], context))
+      }
+      return new ReturnValue(returnValues)
+      }
+    },
+
+    GlobalStatement: function* (node: ast.GlobalStatement, context: Context){
+      if (context.runtime.environments[0].head.hasOwnProperty("global")){
+        for (let i = 0; i < node.globallist.length ; i++){
+          const name = node.globallist[i]
+          context.runtime.environments[0].head["global"].push(name)
+        }
+      }else{
+        context.runtime.environments[0].head["global"] = [];
+        for (let i = 0; i < node.globallist.length ; i++){
+          const name = node.globallist[i]
+          context.runtime.environments[0].head["global"].push(name)
+        }
+      }
+      return undefined
+    },
+
+    NonlocalStatement: function* (node: ast.NonlocalStatement, context: Context){
+      if (context.runtime.environments[0].head.hasOwnProperty("nonlocal")){
+        for (let i = 0; i < node.nonlocallist.length ; i++){
+          const name = node.nonlocallist[i]
+          context.runtime.environments[0].head["nonlocal"].push(name)
+        }
+      }else{
+        context.runtime.environments[0].head["nonlocal"] = [];
+        for (let i = 0; i < node.nonlocallist.length ; i++){
+          const name = node.nonlocallist[i]
+          context.runtime.environments[0].head["nonlocal"].push(name)
+        }
+      }
+      return undefined
     },
 
     // HERE
     CallExpression: function*(node: ast.CallExpression, context: Context) {
       throw new Error("Call expressions not supported in x-slang");
     },
-
-    // BlockStatement: function*(node: ast.BlockStatement, context: Context) {
-    //   throw new Error("Block statements not supported in x-slang");
-    // },
 
     // STRETCH GOAL
     // Not needed in Python 3, because it is a JS only type of expression
@@ -341,15 +599,6 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
     // STRETCH GOAL 
     // ArrowFunctionExpression: function*(node: es.ArrowFunctionExpression, context: Context) {
     //     throw new Error("Arrow functions expressions not supported in x-slang");
-    // },
-
-    ExpressionStatement: function*(node: ast.ExpressionStatement, context: Context) {
-        return yield* evaluate(node.expression, context)
-    },
-
-    // ReturnStatement: function*(node: ast.ReturnStatement, context: Context) {
-    //     const returned = yield* actualValue(node.returned, context)
-    //     return returned
     // },
 
 
@@ -379,18 +628,19 @@ export const evaluators: { [nodeType: string]: Evaluator<ast.Node> } = {
         const environment = createBlockEnvironment(context, 'programEnvironment')
         pushEnvironment(context, environment)
         const result = yield* forceIt(yield* evaluateBlockSatement(context, node), context);
+        // console.log("Program")
         return result;
     }
 }
 // tslint:enable:object-literal-shorthand
 
 export function* evaluate(node: ast.Node, context: Context) {
-  console.log('1111111111111111111111111111')
-  console.log(context)
+  //console.log('1111111111111111111111111111')
+  //console.log(context)
   yield* visit(context, node)
-  console.log('2222222222222222222222222222')
+  //console.log('2222222222222222222222222222')
 
-  console.log(context.runtime.nodes)
+  //console.log(context.runtime.nodes)
   const result = yield* evaluators[node.type](node, context)
   yield* leave(context)
   return result
@@ -469,3 +719,5 @@ export function* apply(
   }
   return result
 }
+
+export function* applyFunction() {}

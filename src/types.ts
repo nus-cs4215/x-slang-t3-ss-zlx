@@ -14,6 +14,9 @@ import * as ast from './parser/ast'
  * different implementations. e.g display() in a web application.
  */
 export interface CustomBuiltIns {
+  print: (val: Value, externalContext: any) => Value
+  range: (start: number, stop: number) => Value[]
+  env: (environment: any) => any
   rawDisplay: (value: Value, str: string, externalContext: any) => Value
   prompt: (value: Value, str: string, externalContext: any) => string | null
   alert: (value: Value, str: string, externalContext: any) => void
@@ -91,6 +94,8 @@ export interface Context<T = any> {
 
   /** Runtime Sepecific state */
   runtime: {
+    break: boolean
+    debuggerOn: boolean
     isRunning: boolean
     environments: Environment[]
     nodes: ast.Node[]
@@ -101,6 +106,16 @@ export interface Context<T = any> {
   numberOfOuterEnvironments: number
 
   prelude: string | null
+
+  /** the state of the debugger */
+  debugger: {
+    /** External observers watching this context */
+    status: boolean
+    state: {
+      it: IterableIterator<T>
+      scheduler: Scheduler
+    }
+  }
 
   /**
    * Used for storing external properties.

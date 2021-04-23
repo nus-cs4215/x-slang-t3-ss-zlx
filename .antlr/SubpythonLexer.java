@@ -1,9 +1,4 @@
-// Generated from e:\4215proj\x-slang-t3-ss-zlx\src\lang\Python3.g4 by ANTLR 4.8
-
-  import { Token } from 'antlr4ts/Token';
-  import { CommonToken } from 'antlr4ts/CommonToken';
-  import { Python3Parser } from './Python3Parser';
-
+// Generated from e:\4215proj\x-slang-t3-ss-zlx\subpython.g4 by ANTLR 4.8
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -14,7 +9,7 @@ import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.misc.*;
 
 @SuppressWarnings({"all", "warnings", "unchecked", "unused", "cast"})
-public class Python3Lexer extends Lexer {
+public class SubpythonLexer extends Lexer {
 	static { RuntimeMetaData.checkVersion("4.8", RuntimeMetaData.VERSION); }
 
 	protected static final DFA[] _decisionToDFA;
@@ -139,13 +134,21 @@ public class Python3Lexer extends Lexer {
 	}
 
 
-	  private token_queue: Token[] = [];
-	  private indents: number[] = [];
-	  private opened: number = 0;
-	  private last_token: Token|undefined = undefined;
 
-	  @Override
-	  public reset(): void {
+	  let CommonToken = require('antlr4/Token').CommonToken;
+	  let Python3Parser = require('./Python3Parser').Python3Parser;
+
+	  let old_lexer = Python3Lexer;
+	  Python3Lexer = function() {
+	    old_lexer.apply(this, arguments);
+	    this.reset.call(this);
+	  }
+
+	  Python3Lexer.prototype = Object.create(old_lexer.prototype);
+	  Python3Lexer.prototype.constructor = Python3Lexer;
+
+
+	  Python3Lexer.prototype.reset = function() {
 	    // A queue where extra tokens are pushed on (see the NEWLINE lexer rule).
 	    this.token_queue = [];
 
@@ -155,18 +158,12 @@ public class Python3Lexer extends Lexer {
 	    // The amount of opened braces, brackets and parenthesis.
 	    this.opened = 0;
 
-	    super.reset();
+	    antlr4.Lexer.prototype.reset.call(this);
 	  };
 
-	  @Override
-	  public emit(token?: Token): Token {
-	    if (token) {
-	      token = super.emit(token);
-	    } else {
-	      token = super.emit();
-	    }
+	  Python3Lexer.prototype.emitToken = function(token) {
+	    this._token = token;
 	    this.token_queue.push(token);
-	    return token;
 	  };
 
 	  /**
@@ -176,10 +173,9 @@ public class Python3Lexer extends Lexer {
 	   * literal.
 	   *
 	   */
-	  @Override
-	  public nextToken(): Token {
+	  Python3Lexer.prototype.nextToken = function() {
 	    // Check if the end-of-file is ahead and there are still some DEDENTS expected.
-	    if (this.inputStream.LA(1) === Python3Parser.EOF && this.indents.length) {
+	    if (this._input.LA(1) === Python3Parser.EOF && this.indents.length) {
 
 	      // Remove any trailing EOF tokens from our buffer.
 	      this.token_queue = this.token_queue.filter(function(val) {
@@ -187,40 +183,30 @@ public class Python3Lexer extends Lexer {
 	      });
 
 	      // First emit an extra line break that serves as the end of the statement.
-	      this.emit(this.commonToken(Python3Parser.NEWLINE, "\n"));
+	      this.emitToken(this.commonToken(Python3Parser.NEWLINE, "\n"));
 
 	      // Now emit as much DEDENT tokens as needed.
 	      while (this.indents.length) {
-	        this.emit(this.createDedent());
+	        this.emitToken(this.createDedent());
 	        this.indents.pop();
 	      }
 
 	      // Put the EOF back on the token stream.
-	      this.emit(this.commonToken(Python3Parser.EOF, "<EOF>"));
+	      this.emitToken(this.commonToken(Python3Parser.EOF, "<EOF>"));
 	    }
 
-	    let next = super.nextToken();
+	    let next = antlr4.Lexer.prototype.nextToken.call(this);
+	    return this.token_queue.length ? this.token_queue.shift() : next;
+	  };
 
-	    if (next.channel == Token.DEFAULT_CHANNEL) {
-	      // Keep track of the last token on the default channel.
-	      this.last_token = next;
-	    }
-
-	    return this.token_queue.shift() || next;
+	  Python3Lexer.prototype.createDedent = function() {
+	    return this.commonToken(Python3Parser.DEDENT, "");
 	  }
 
-	  private createDedent(): Token {
-	    let dedent = this.commonToken(Python3Parser.DEDENT, "");
-	    if (this.last_token) {
-	      dedent.line = this.last_token.line;
-	    }
-	    return dedent;
-	  }
-
-	  private commonToken(type: number, text: string): CommonToken {
-	    let stop: number = this.charIndex - 1;
-	    let start: number = text.length ? stop - text.length + 1 : stop;
-	    return new CommonToken(type, text, this._tokenFactorySourcePair, Lexer.DEFAULT_TOKEN_CHANNEL, start, stop);
+	  Python3Lexer.prototype.commonToken = function(type, text) {
+	    let stop = this.getCharIndex() - 1;
+	    let start = text.length ? stop - text.length + 1 : stop;
+	    return new CommonToken(this._tokenFactorySourcePair, type, antlr4.Lexer.DEFAULT_TOKEN_CHANNEL, start, stop);
 	  }
 
 	  // Calculates the indentation of the provided spaces, taking the
@@ -231,7 +217,7 @@ public class Python3Lexer extends Lexer {
 	  //  the replacement is a multiple of eight [...]"
 	  //
 	  //  -- https://docs.python.org/3.1/reference/lexical_analysis.html#indentation
-	  private getIndentationCount(whitespace: string): number {
+	  Python3Lexer.prototype.getIndentationCount = function(whitespace) {
 	    let count = 0;
 	    for (let i = 0; i < whitespace.length; i++) {
 	      if (whitespace[i] === '\t') {
@@ -243,18 +229,18 @@ public class Python3Lexer extends Lexer {
 	    return count;
 	  }
 
-	  private atStartOfInput(): boolean {
-	    return this.charIndex === 0;
+	  Python3Lexer.prototype.atStartOfInput = function() {
+	    return this.getCharIndex() === 0;
 	  }
 
 
-	public Python3Lexer(CharStream input) {
+	public SubpythonLexer(CharStream input) {
 		super(input);
 		_interp = new LexerATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
 	}
 
 	@Override
-	public String getGrammarFileName() { return "Python3.g4"; }
+	public String getGrammarFileName() { return "subpython.g4"; }
 
 	@Override
 	public String[] getRuleNames() { return ruleNames; }
@@ -306,14 +292,14 @@ public class Python3Lexer extends Lexer {
 
 			     // Strip newlines inside open clauses except if we are near EOF. We keep NEWLINEs near EOF to
 			     // satisfy the final newline needed by the single_put rule used by the REPL.
-			     let next = this.inputStream.LA(1);
-			     let nextnext = this.inputStream.LA(2);
+			     let next = this._input.LA(1);
+			     let nextnext = this._input.LA(2);
 			     if (this.opened > 0 || (nextnext != -1 /* EOF */ && (next === 13 /* '\r' */ || next === 10 /* '\n' */ || next === 35 /* '#' */))) {
 			       // If we're inside a list or on a blank line, ignore all indents,
 			       // dedents and line breaks.
 			       this.skip();
 			     } else {
-			       this.emit(this.commonToken(Python3Parser.NEWLINE, newLine));
+			       this.emitToken(this.commonToken(Python3Parser.NEWLINE, newLine));
 
 			       let indent = this.getIndentationCount(spaces);
 			       let previous = this.indents.length ? this.indents[this.indents.length - 1] : 0;
@@ -323,11 +309,11 @@ public class Python3Lexer extends Lexer {
 			         this.skip();
 			       } else if (indent > previous) {
 			         this.indents.push(indent);
-			         this.emit(this.commonToken(Python3Parser.INDENT, spaces));
+			         this.emitToken(this.commonToken(Python3Parser.INDENT, spaces));
 			       } else {
 			         // Possibly emit more than 1 DEDENT token.
 			         while (this.indents.length && this.indents[this.indents.length - 1] > indent) {
-			           this.emit(this.createDedent());
+			           this.emitToken(this.createDedent());
 			           this.indents.pop();
 			         }
 			       }

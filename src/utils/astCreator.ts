@@ -122,6 +122,33 @@ export const returnStatement = (
   loc
 })
 
+export const globalStatement = (
+  globallist: Array<String>,
+  loc?: ast.SourceLocation | null
+): ast.GlobalStatement => ({
+  type: 'GlobalStatement',
+  globallist,
+  loc
+})
+
+export const nonlocalStatement = (
+  nonlocallist: Array<String>,
+  loc?: ast.SourceLocation | null
+): ast.NonlocalStatement => ({
+  type: 'NonlocalStatement',
+  nonlocallist,
+  loc
+})
+
+export const returnPythonStatement = (
+  returned: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.ReturnPythonStatement => ({
+  type: 'ReturnPythonStatement',
+  argument: returned,
+  loc
+})
+
 export const property = (key: string, value: ast.Expression): ast.Property => ({
   type: 'Property',
   method: false,
@@ -214,12 +241,21 @@ export const arrayExpression = (elements: ast.Expression[]): ast.ArrayExpression
   elements
 })
 
+export const subscriptListExpression = (
+  body: ast.Expression[],
+  loc: ast.SourceLocation | null
+): ast.SubscriptListExpression => ({
+  type: 'SubscriptListExpression',
+  body,
+  loc
+})
+
 export const assignmentExpression = (
   left: ast.Identifier,
   right: ast.Expression
 ): ast.AssignmentExpression => ({
   type: 'AssignmentExpression',
-  operator: "=",
+  operator: '=',
   left,
   right
 })
@@ -280,6 +316,69 @@ export const functionDeclaration = (
   loc
 })
 
+export const functionPythonDeclaration = (
+  id: ast.Identifier,
+  params: ast.Expression,
+  body: ast.Statement,
+  loc?: ast.SourceLocation | null
+): ast.FunctionPythonDeclaration => ({
+  type: 'FunctionPythonDeclaration',
+  id,
+  params,
+  body,
+  loc
+})
+
+export const parameterExpression = (
+  expressions: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.ParameterExpression => ({
+  type: 'ParameterExpression',
+  expressions,
+  loc
+})
+
+export const typedargslistExpression = (
+  name: ast.Expression,
+  loc?: ast.SourceLocation | null
+): ast.TypedargslistExpression => ({
+  type: 'TypedargslistExpression',
+  name,
+  default: null,
+  loc
+})
+
+export const trailerExpression = (
+  base: ast.Expression,
+  trailer: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.TrailerExpression => ({
+  type: 'TrailerExpression',
+  base,
+  trailer,
+  loc
+})
+
+export const argListExpression = (
+  body: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.ArgListExpression => ({
+  type: 'ArgListExpression',
+  body,
+  loc
+})
+
+export const argumentExpression = (
+  key: ast.Expression | null,
+  value: ast.Expression,
+  loc?: ast.SourceLocation | null
+): ast.ArgumentExpression => ({
+  type: 'ArgumentExpression',
+  key,
+  value,
+  loc
+})
+
 export const blockExpression = (
   body: ast.Statement[],
   loc?: ast.SourceLocation | null
@@ -323,6 +422,22 @@ export const variableDeclarator = (
   loc
 })
 
+export const DictExpression = (elements: ast.Expression[]): ast.DictExpression => ({
+  type: 'DictExpression',
+  elements
+})
+
+export const KeyValueExpression = (
+  key: ast.Expression,
+  value: ast.Expression,
+  loc?: ast.SourceLocation | null
+): ast.KeyValueExpression => ({
+  type: 'KeyValueExpression',
+  key,
+  value,
+  loc
+})
+
 export const ifStatement = (
   test: ast.Expression,
   consequent: ast.BlockStatement,
@@ -344,5 +459,52 @@ export const whileStatement = (
   type: 'WhileStatement',
   test,
   body,
+  loc
+})
+
+export const whilePythonStatement = (
+  test: ast.Expression,
+  body: ast.Statement,
+  els: ast.Statement,
+  loc?: ast.SourceLocation | null
+): ast.WhilePythonStatement => ({
+  type: 'WhilePythonStatement',
+  test,
+  body,
+  els,
+  loc
+})
+
+export const forPythonStatement = (
+  iter: ast.Expression,
+  iterated: ast.Expression[],
+  body: ast.Statement,
+  els: ast.Statement,
+  loc?: ast.SourceLocation | null
+): ast.ForPythonStatement => ({
+  type: 'ForPythonStatement',
+  iter,
+  iterated,
+  body,
+  els,
+  loc
+})
+
+export const sequenceExpression = (
+  expressions: ast.Expression[],
+  loc?: ast.SourceLocation | null
+): ast.SequenceExpression => ({
+  type: 'SequenceExpression',
+  expressions,
+  loc
+})
+
+export const passStatement = (loc?: ast.SourceLocation | null): ast.PassStatement => ({
+  type: 'PassStatement',
+  loc
+})
+
+export const emptyStatement = (loc?: ast.SourceLocation | null): ast.EmptyStatement => ({
+  type: 'EmptyStatement',
   loc
 })

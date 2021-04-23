@@ -1,17 +1,19 @@
 // Generated from ./src/lang/Python3.g4 by ANTLR 4.9.0-SNAPSHOT
 
+import { Token } from 'antlr4ts/Token'
+import { CommonToken } from 'antlr4ts/CommonToken'
+import { Python3Parser } from './Python3Parser'
+
 import { ATN } from 'antlr4ts/atn/ATN'
 import { ATNDeserializer } from 'antlr4ts/atn/ATNDeserializer'
 import { CharStream } from 'antlr4ts/CharStream'
 import { Lexer } from 'antlr4ts/Lexer'
 import { LexerATNSimulator } from 'antlr4ts/atn/LexerATNSimulator'
-//import { NotNull } from 'antlr4ts/Decorators'
-//import { Override } from 'antlr4ts/Decorators'
+// import { NotNull } from "antlr4ts/Decorators";
+import { Override } from 'antlr4ts/Decorators'
 import { RuleContext } from 'antlr4ts/RuleContext'
 import { Vocabulary } from 'antlr4ts/Vocabulary'
 import { VocabularyImpl } from 'antlr4ts/VocabularyImpl'
-import { Python3Parser } from './Python3Parser'
-import { CommonToken } from 'antlr4ts/CommonToken'
 
 import * as Utils from 'antlr4ts/misc/Utils'
 
@@ -436,13 +438,16 @@ export class Python3Lexer extends Lexer {
   public get vocabulary(): Vocabulary {
     return Python3Lexer.VOCABULARY
   }
-  private token_queue: Array<CommonToken>
-  private indents: Array<number>
-  private opened: number
+  // tslint:enable:no-trailing-whitespace
 
-  constructor(input: CharStream) {
-    super(input)
-    this._interp = new LexerATNSimulator(Python3Lexer._ATN, this)
+  private token_queue: Token[] = []
+  private indents: number[] = []
+  private opened: number = 0
+  private last_token: Token | undefined = undefined
+
+  @Override
+  public reset(): void {
+    // A queue where extra tokens are pushed on (see the NEWLINE lexer rule).
     this.token_queue = []
 
     // The stack that keeps track of the indentation level.
@@ -451,7 +456,107 @@ export class Python3Lexer extends Lexer {
     // The amount of opened braces, brackets and parenthesis.
     this.opened = 0
 
-    Lexer.prototype.reset.call(this)
+    super.reset()
+  }
+
+  @Override
+  public emit(token?: Token): Token {
+    if (token) {
+      token = super.emit(token)
+    } else {
+      token = super.emit()
+    }
+    this.token_queue.push(token)
+    return token
+  }
+
+  /**
+   * Return the next token from the character stream and records this last
+   * token in case it resides on the default channel. This recorded token
+   * is used to determine when the lexer could possibly match a regex
+   * literal.
+   *
+   */
+  @Override
+  public nextToken(): Token {
+    // Check if the end-of-file is ahead and there are still some DEDENTS expected.
+    if (this.inputStream.LA(1) === Python3Parser.EOF && this.indents.length) {
+      // Remove any trailing EOF tokens from our buffer.
+      this.token_queue = this.token_queue.filter(function (val) {
+        return val.type !== Python3Parser.EOF
+      })
+
+      // First emit an extra line break that serves as the end of the statement.
+      this.emit(this.commonToken(Python3Parser.NEWLINE, '\n'))
+
+      // Now emit as much DEDENT tokens as needed.
+      while (this.indents.length) {
+        this.emit(this.createDedent())
+        this.indents.pop()
+      }
+
+      // Put the EOF back on the token stream.
+      this.emit(this.commonToken(Python3Parser.EOF, '<EOF>'))
+    }
+
+    const next = super.nextToken()
+
+    if (next.channel == Token.DEFAULT_CHANNEL) {
+      // Keep track of the last token on the default channel.
+      this.last_token = next
+    }
+
+    return this.token_queue.shift() || next
+  }
+
+  private createDedent(): Token {
+    const dedent = this.commonToken(Python3Parser.DEDENT, '')
+    if (this.last_token) {
+      dedent.line = this.last_token.line
+    }
+    return dedent
+  }
+
+  private commonToken(type: number, text: string): CommonToken {
+    const stop: number = this.charIndex - 1
+    const start: number = text.length ? stop - text.length + 1 : stop
+    return new CommonToken(
+      type,
+      text,
+      this._tokenFactorySourcePair,
+      Lexer.DEFAULT_TOKEN_CHANNEL,
+      start,
+      stop
+    )
+  }
+
+  // Calculates the indentation of the provided spaces, taking the
+  // following rules into account:
+  //
+  // "Tabs are replaced (from left to right) by one to eight spaces
+  //  such that the total number of characters up to and including
+  //  the replacement is a multiple of eight [...]"
+  //
+  //  -- https://docs.python.org/3.1/reference/lexical_analysis.html#indentation
+  private getIndentationCount(whitespace: string): number {
+    let count = 0
+    for (let i = 0; i < whitespace.length; i++) {
+      if (whitespace[i] === '\t') {
+        count += 8 - (count % 8)
+      } else {
+        count++
+      }
+    }
+    return count
+  }
+
+  private atStartOfInput(): boolean {
+    return this.charIndex === 0
+  }
+
+  constructor(input: CharStream) {
+    super(input)
+    this._interp = new LexerATNSimulator(Python3Lexer._ATN, this)
   }
 
   // @Override
@@ -519,8 +624,8 @@ export class Python3Lexer extends Lexer {
 
         // Strip newlines inside open clauses except if we are near EOF. We keep NEWLINEs near EOF to
         // satisfy the final newline needed by the single_put rule used by the REPL.
-        const next = this._input.LA(1)
-        const nextnext = this._input.LA(2)
+        const next = this.inputStream.LA(1)
+        const nextnext = this.inputStream.LA(2)
         if (
           this.opened > 0 ||
           (nextnext != -1 /* EOF */ &&
@@ -530,7 +635,7 @@ export class Python3Lexer extends Lexer {
           // dedents and line breaks.
           this.skip()
         } else {
-          this.emitToken(this.commonToken(Python3Parser.NEWLINE, newLine))
+          this.emit(this.commonToken(Python3Parser.NEWLINE, newLine))
 
           const indent = this.getIndentationCount(spaces)
           const previous = this.indents.length ? this.indents[this.indents.length - 1] : 0
@@ -540,11 +645,11 @@ export class Python3Lexer extends Lexer {
             this.skip()
           } else if (indent > previous) {
             this.indents.push(indent)
-            this.emitToken(this.commonToken(Python3Parser.INDENT, spaces))
+            this.emit(this.commonToken(Python3Parser.INDENT, spaces))
           } else {
             // Possibly emit more than 1 DEDENT token.
             while (this.indents.length && this.indents[this.indents.length - 1] > indent) {
-              this.emitToken(this.createDedent())
+              this.emit(this.createDedent())
               this.indents.pop()
             }
           }
@@ -552,35 +657,6 @@ export class Python3Lexer extends Lexer {
 
         break
     }
-  }
-  private getIndentationCount(whitespace: string) {
-    let count = 0
-    for (let i = 0; i < whitespace.length; i++) {
-      if (whitespace[i] === '\t') {
-        count += 8 - (count % 8)
-      } else {
-        count++
-      }
-    }
-    return count
-  }
-  private createDedent() {
-    return this.commonToken(Python3Parser.DEDENT, '')
-  }
-  private getCharIndex() {
-    return this._input.index
-  }
-  private commonToken(type: number, text: string) {
-    const stop = this.getCharIndex() - 1
-    const start = text.length ? stop - text.length + 1 : stop
-    return new CommonToken(
-      type,
-      undefined,
-      this._tokenFactorySourcePair,
-      Lexer.DEFAULT_TOKEN_CHANNEL,
-      start,
-      stop
-    )
   }
   private OPEN_PAREN_action(_localctx: RuleContext, actionIndex: number): void {
     switch (actionIndex) {
@@ -639,15 +715,8 @@ export class Python3Lexer extends Lexer {
     }
     return true
   }
-  private atStartOfInput() {
-    return this.getCharIndex() === 0
-  }
-  private emitToken(token: CommonToken) {
-    this._token = token
-    this.token_queue.push(token)
-  }
 
-  //private static readonly _serializedATNSegments: number = 2
+  // private static readonly _serializedATNSegments: number = 2;
   private static readonly _serializedATNSegment0: string =
     '\x03\uC91D\uCABA\u058D\uAFBA\u4F53\u0607\uEA8B\uC241\x02^\u0347\b\x01' +
     '\x04\x02\t\x02\x04\x03\t\x03\x04\x04\t\x04\x04\x05\t\x05\x04\x06\t\x06' +

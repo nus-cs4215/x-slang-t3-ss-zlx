@@ -28,27 +28,29 @@
  *                https://github.com/bkiers/python3-parser
  * Developed by : Bart Kiers, bart@big-o.nl
  */
-grammar Python3;
+grammar Subpython;
 
 // All comments that start with "///" are copy-pasted from
 // The Python Language Reference: https://docs.python.org/3.3/reference/grammar.html
 
 tokens { INDENT, DEDENT }
 
-@lexer::header {
-  import { Token } from 'antlr4ts/Token';
-  import { CommonToken } from 'antlr4ts/CommonToken';
-  import { Python3Parser } from './Python3Parser';
-}
-
 @lexer::members {
-  private token_queue: Token[] = [];
-  private indents: number[] = [];
-  private opened: number = 0;
-  private last_token: Token|undefined = undefined;
 
-  @Override
-  public reset(): void {
+  let CommonToken = require('antlr4/Token').CommonToken;
+  let Python3Parser = require('./Python3Parser').Python3Parser;
+
+  let old_lexer = Python3Lexer;
+  Python3Lexer = function() {
+    old_lexer.apply(this, arguments);
+    this.reset.call(this);
+  }
+
+  Python3Lexer.prototype = Object.create(old_lexer.prototype);
+  Python3Lexer.prototype.constructor = Python3Lexer;
+
+
+  Python3Lexer.prototype.reset = function() {
     // A queue where extra tokens are pushed on (see the NEWLINE lexer rule).
     this.token_queue = [];
 
@@ -58,18 +60,12 @@ tokens { INDENT, DEDENT }
     // The amount of opened braces, brackets and parenthesis.
     this.opened = 0;
 
-    super.reset();
+    antlr4.Lexer.prototype.reset.call(this);
   };
 
-  @Override
-  public emit(token?: Token): Token {
-    if (token) {
-      token = super.emit(token);
-    } else {
-      token = super.emit();
-    }
+  Python3Lexer.prototype.emitToken = function(token) {
+    this._token = token;
     this.token_queue.push(token);
-    return token;
   };
 
   /**
@@ -79,10 +75,9 @@ tokens { INDENT, DEDENT }
    * literal.
    *
    */
-  @Override
-  public nextToken(): Token {
+  Python3Lexer.prototype.nextToken = function() {
     // Check if the end-of-file is ahead and there are still some DEDENTS expected.
-    if (this.inputStream.LA(1) === Python3Parser.EOF && this.indents.length) {
+    if (this._input.LA(1) === Python3Parser.EOF && this.indents.length) {
 
       // Remove any trailing EOF tokens from our buffer.
       this.token_queue = this.token_queue.filter(function(val) {
@@ -90,40 +85,30 @@ tokens { INDENT, DEDENT }
       });
 
       // First emit an extra line break that serves as the end of the statement.
-      this.emit(this.commonToken(Python3Parser.NEWLINE, "\n"));
+      this.emitToken(this.commonToken(Python3Parser.NEWLINE, "\n"));
 
       // Now emit as much DEDENT tokens as needed.
       while (this.indents.length) {
-        this.emit(this.createDedent());
+        this.emitToken(this.createDedent());
         this.indents.pop();
       }
 
       // Put the EOF back on the token stream.
-      this.emit(this.commonToken(Python3Parser.EOF, "<EOF>"));
+      this.emitToken(this.commonToken(Python3Parser.EOF, "<EOF>"));
     }
 
-    let next = super.nextToken();
+    let next = antlr4.Lexer.prototype.nextToken.call(this);
+    return this.token_queue.length ? this.token_queue.shift() : next;
+  };
 
-    if (next.channel == Token.DEFAULT_CHANNEL) {
-      // Keep track of the last token on the default channel.
-      this.last_token = next;
-    }
-
-    return this.token_queue.shift() || next;
+  Python3Lexer.prototype.createDedent = function() {
+    return this.commonToken(Python3Parser.DEDENT, "");
   }
 
-  private createDedent(): Token {
-    let dedent = this.commonToken(Python3Parser.DEDENT, "");
-    if (this.last_token) {
-      dedent.line = this.last_token.line;
-    }
-    return dedent;
-  }
-
-  private commonToken(type: number, text: string): CommonToken {
-    let stop: number = this.charIndex - 1;
-    let start: number = text.length ? stop - text.length + 1 : stop;
-    return new CommonToken(type, text, this._tokenFactorySourcePair, Lexer.DEFAULT_TOKEN_CHANNEL, start, stop);
+  Python3Lexer.prototype.commonToken = function(type, text) {
+    let stop = this.getCharIndex() - 1;
+    let start = text.length ? stop - text.length + 1 : stop;
+    return new CommonToken(this._tokenFactorySourcePair, type, antlr4.Lexer.DEFAULT_TOKEN_CHANNEL, start, stop);
   }
 
   // Calculates the indentation of the provided spaces, taking the
@@ -134,7 +119,7 @@ tokens { INDENT, DEDENT }
   //  the replacement is a multiple of eight [...]"
   //
   //  -- https://docs.python.org/3.1/reference/lexical_analysis.html#indentation
-  private getIndentationCount(whitespace: string): number {
+  Python3Lexer.prototype.getIndentationCount = function(whitespace) {
     let count = 0;
     for (let i = 0; i < whitespace.length; i++) {
       if (whitespace[i] === '\t') {
@@ -146,8 +131,8 @@ tokens { INDENT, DEDENT }
     return count;
   }
 
-  private atStartOfInput(): boolean {
-    return this.charIndex === 0;
+  Python3Lexer.prototype.atStartOfInput = function() {
+    return this.getCharIndex() === 0;
   }
 }
 
@@ -155,21 +140,9 @@ tokens { INDENT, DEDENT }
  * parser rules
  */
 
-/// single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
-single_input
- : NEWLINE
- | simple_stmt
- | compound_stmt NEWLINE
- ;
-
 /// file_input: (NEWLINE | stmt)* ENDMARKER
 file_input
  : ( NEWLINE | stmt )* EOF
- ;
-
-/// eval_input: testlist NEWLINE* ENDMARKER
-eval_input
- : testlist NEWLINE* EOF
  ;
 
 /// decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
@@ -201,29 +174,19 @@ parameters
 ///                ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
 ///              |  '*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef)
 typedargslist
- : tfpdef ( '=' test )? ( ',' tfpdef ( '=' test )? )* ( ',' ( '*' tfpdef? ( ',' tfpdef ( '=' test )? )* ( ',' '**' tfpdef )?
-                                                            | '**' tfpdef
-                                                            )?
-                                                      )?
- | '*' tfpdef? ( ',' tfpdef ( '=' test )? )* ( ',' '**' tfpdef )?
- | '**' tfpdef
+ : tfpdef ( '=' test )? ( ',' tfpdef ( '=' test )? )* 
  ;
 
 /// tfpdef: NAME [':' test]
 tfpdef
- : NAME ( ':' test )?
+ : NAME
  ;
 
 /// varargslist: (vfpdef ['=' test] (',' vfpdef ['=' test])* [','
 ///       ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
 ///     |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef)
 varargslist
- : vfpdef ( '=' test )? ( ',' vfpdef ( '=' test )? )* ( ',' ( '*' vfpdef? ( ',' vfpdef ( '=' test )? )* ( ',' '**' vfpdef )?
-                                                            | '**' vfpdef
-                                                            )?
-                                                      )?
- | '*' vfpdef? ( ',' vfpdef ( '=' test )? )* ( ',' '**' vfpdef )?
- | '**' vfpdef
+ : vfpdef ( '=' test )? ( ',' vfpdef ( '=' test )? )*
  ;
 
 /// vfpdef: NAME
@@ -265,7 +228,7 @@ expr_stmt
 
 /// testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
 testlist_star_expr
- : ( test | star_expr ) ( ',' ( test |  star_expr ) )* ','?
+ : ( test | star_expr )
  ;
 
 /// augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
@@ -345,11 +308,8 @@ import_name
 /// import_from: ('from' (('.' | '...')* dotted_name | ('.' | '...')+)
 ///               'import' ('*' | '(' import_as_names ')' | import_as_names))
 import_from
- : FROM ( ( '.' | '...' )* dotted_name
-        | ('.' | '...')+
-        )
-   IMPORT ( '*'
-          | '(' import_as_names ')'
+ : FROM ( dotted_name )
+   IMPORT ( '(' import_as_names ')'
           | import_as_names
           )
  ;
@@ -391,7 +351,7 @@ nonlocal_stmt
 
 /// assert_stmt: 'assert' test [',' test]
 assert_stmt
- : ASSERT test ( ',' test )?
+ : ASSERT test
  ;
 
 /// compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
@@ -403,7 +363,6 @@ compound_stmt
  | with_stmt
  | funcdef
  | classdef
- | decorated
  ;
 
 /// if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
@@ -427,16 +386,15 @@ for_stmt
 ///       ['finally' ':' suite] |
 ///      'finally' ':' suite))
 try_stmt
- : TRY ':' suite ( ( except_clause ':' suite )+
+ : TRY ':' suite ( ( EXCEPT ':' suite )
                    ( ELSE ':' suite )?
                    ( FINALLY ':' suite )?
-                 | FINALLY ':' suite
                  )
  ;
 
 /// with_stmt: 'with' with_item (',' with_item)*  ':' suite
 with_stmt
- : WITH with_item ( ',' with_item )* ':' suite
+ : WITH with_item ':' suite
  ;
 
 /// with_item: test ['as' expr]
@@ -446,9 +404,9 @@ with_item
 
 /// # NB compile.c makes sure that the default except clause is last
 /// except_clause: 'except' [test ['as' NAME]]
-except_clause
- : EXCEPT ( test ( AS NAME )? )?
- ;
+// except_clause
+//  : EXCEPT
+//  ;
 
 /// suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
 suite
@@ -583,7 +541,7 @@ atom
  | '{' dictorsetmaker? '}'
  | NAME
  | number
- | str+
+ | STRING_LITERAL+
  | '...'
  | NONE
  | TRUE
@@ -592,9 +550,7 @@ atom
 
 /// testlist_comp: test ( comp_for | (',' test)* [','] )
 testlist_comp
- : test ( comp_for
-        | ( ',' test )* ','?
-        )
+ : test ( ( ',' test )* ','?)
  ;
 
 /// trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
@@ -633,11 +589,9 @@ testlist
 /// dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
 ///                   (test (comp_for | (',' test)* [','])) )
 dictorsetmaker
- : test ':' test ( comp_for
-                 | ( ',' test ':' test )* ','?
+ : test ':' test ( ( ',' test ':' test )* ','?
                  )
- | test ( comp_for
-        | ( ',' test )* ','?
+ | test ( ( ',' test )* ','?
         )
  ;
 
@@ -650,35 +604,32 @@ classdef
 ///                          |'*' test (',' argument)* [',' '**' test]
 ///                          |'**' test)
 arglist
- : ( argument ',' )* ( argument ','?
-                     | '*' test ( ',' argument )* ( ',' '**' test )?
-                     | '**' test
-                     )
+ : ( argument ',' )* ( argument ','?)
  ;
 
 /// # The reason that keywords are test nodes instead of NAME is that using NAME
 /// # results in an ambiguity. ast.c makes sure it's a NAME.
 /// argument: test [comp_for] | test '=' test  # Really [keyword '='] test
 argument
- : test comp_for?
+ : test
  | test '=' test
  ;
 
 /// comp_iter: comp_for | comp_if
-comp_iter
- : comp_for
- | comp_if
- ;
+// comp_iter
+//  : comp_for
+//  | comp_if
+//  ;
 
-/// comp_for: 'for' exprlist 'in' or_test [comp_iter]
-comp_for
- : FOR exprlist IN or_test comp_iter?
- ;
+// /// comp_for: 'for' exprlist 'in' or_test [comp_iter]
+// comp_for
+//  : FOR exprlist IN or_test comp_iter?
+//  ;
 
-/// comp_if: 'if' test_nocond [comp_iter]
-comp_if
- : IF test_nocond comp_iter?
- ;
+// /// comp_if: 'if' test_nocond [comp_iter]
+// comp_if
+//  : IF test_nocond comp_iter?
+//  ;
 
 /// yield_expr: 'yield' [testlist]
 yield_expr
@@ -689,11 +640,6 @@ yield_expr
 yield_arg
  : FROM test
  | testlist
- ;
-
-str
- : STRING_LITERAL
- | BYTES_LITERAL
  ;
 
 number
@@ -749,23 +695,22 @@ CONTINUE : 'continue';
 BREAK : 'break';
 
 NEWLINE
- : (
-		{this.atStartOfInput()}? SPACES
-		| ( '\r'? '\n' | '\r') SPACES?
-	) {
+ : ( {this.atStartOfInput()}?   SPACES
+   | ( '\r'? '\n' | '\r' ) SPACES?
+   ) {
      let newLine = this.text.replace(/[^\r\n]+/g, '');
      let spaces = this.text.replace(/[\r\n]+/g, '');
 
      // Strip newlines inside open clauses except if we are near EOF. We keep NEWLINEs near EOF to
      // satisfy the final newline needed by the single_put rule used by the REPL.
-     let next = this.inputStream.LA(1);
-     let nextnext = this.inputStream.LA(2);
+     let next = this._input.LA(1);
+     let nextnext = this._input.LA(2);
      if (this.opened > 0 || (nextnext != -1 /* EOF */ && (next === 13 /* '\r' */ || next === 10 /* '\n' */ || next === 35 /* '#' */))) {
        // If we're inside a list or on a blank line, ignore all indents,
        // dedents and line breaks.
        this.skip();
      } else {
-       this.emit(this.commonToken(Python3Parser.NEWLINE, newLine));
+       this.emitToken(this.commonToken(Python3Parser.NEWLINE, newLine));
 
        let indent = this.getIndentationCount(spaces);
        let previous = this.indents.length ? this.indents[this.indents.length - 1] : 0;
@@ -775,16 +720,17 @@ NEWLINE
          this.skip();
        } else if (indent > previous) {
          this.indents.push(indent);
-         this.emit(this.commonToken(Python3Parser.INDENT, spaces));
+         this.emitToken(this.commonToken(Python3Parser.INDENT, spaces));
        } else {
          // Possibly emit more than 1 DEDENT token.
          while (this.indents.length && this.indents[this.indents.length - 1] > indent) {
-           this.emit(this.createDedent());
+           this.emitToken(this.createDedent());
            this.indents.pop();
          }
        }
      }
-   };
+   }
+ ;
 
 /// identifier   ::=  id_start id_continue*
 NAME
