@@ -16,6 +16,7 @@ import * as ast from './parser/ast'
 export interface CustomBuiltIns {
   print: (val: Value, externalContext: any) => Value
   range: (start: number, stop: number) => Value[]
+  env: (environment: any) => any
   rawDisplay: (value: Value, str: string, externalContext: any) => Value
   prompt: (value: Value, str: string, externalContext: any) => string | null
   alert: (value: Value, str: string, externalContext: any) => void

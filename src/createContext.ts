@@ -108,9 +108,11 @@ export const importBuiltins = (context: Context, externalBuiltIns: CustomBuiltIn
   ensureGlobalEnvironmentExist(context)
   const print = (v: Value) => externalBuiltIns.print(v, context.externalContext)
   const range = (start: number, stop: number) => externalBuiltIns.range(start, stop)
+  const env = (environment: any) => externalBuiltIns.env(environment)
   if (context.variant === 'python') {
     defineBuiltin(context, 'print(val)', print)
     defineBuiltin(context, 'range(start, stop)', range)
+    defineBuiltin(context, 'env(environment)', env)
   }
 }
 
@@ -123,6 +125,7 @@ const defaultBuiltIns: CustomBuiltIns = {
   print: misc.print,
   // See issue #5
   range: misc.range,
+  env: misc.env,
   prompt: misc.rawDisplay,
   // See issue #11
   alert: misc.rawDisplay,

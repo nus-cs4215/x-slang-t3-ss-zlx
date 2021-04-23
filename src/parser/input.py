@@ -1,3 +1,11 @@
+a = 1
+b = 2
+# def func():
+#     global a
+#     a = 2
+#     return 3
+# c = func()
+env()
 # a = 1
 
 # def f():
@@ -12,8 +20,6 @@
 #     g()
 #     return a
 # f()
-for i in range(0, 5):
-    print(i)
 
 # c = 3
 
