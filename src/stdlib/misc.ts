@@ -6,23 +6,23 @@ export function print(value: Value, externalContext: any) {
   return value
 }
 
-export function env(environment: any){
-  let returnEnv = {}
+export function env(environment: any) {
+  const returnEnv = {}
   let env = environment.runtime.environments[0]
-  while(env.name !== 'global'){
-    let funcName = ""
-    if(env.name !== "programEnvironment"){
-      funcName = env.name.replace('functionEnvironment','');
+  while (env.name !== 'global') {
+    let funcName = ''
+    if (env.name !== 'programEnvironment') {
+      funcName = env.name.replace('functionEnvironment', '')
     } else {
-      funcName = "program"
+      funcName = 'program'
     }
-    let funcEnv = {}
-    for (const [key, value] of Object.entries(env.head)){
-      if(value instanceof Object){
-        if(value['type'] === "FunctionPythonDeclaration"){
-          funcEnv[key] = "function declaration"
+    const funcEnv = {}
+    for (const [key, value] of Object.entries(env.head)) {
+      if (value instanceof Object) {
+        if (value['type'] === 'FunctionPythonDeclaration') {
+          funcEnv[key] = 'function declaration'
         }
-      } else if(key !== "func"){
+      } else if (key !== 'func') {
         funcEnv[key] = value
       }
     }

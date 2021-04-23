@@ -1,7 +1,7 @@
 # T3 Python 
 
 ## Python 3 implemented in Typescript
-This page outlines our work done so far in implementing the Python 3 programming language in Typescript. This documentation covers the key considerations taken when building the Parser using the Antlr tool, some noteworthy features of Python 3 that we have covered in our interpreter, and example use cases.
+This page outlines our work done so far in implementing the Python 3 programming language in Typescript. This documentation covers the key considerations taken when building the Parser using the Antlr tool, some noteworthy features of Python 3 that we have covered in our interpreter, example use cases and how we have tried to implement our own version of an environment model visualiser for Python.
 
 Source Code for the X-Frontend: [x-frontend-ts-ss-zlx](https://github.com/nus-cs4215/x-frontend-t3-ss-zlx)
 
@@ -119,6 +119,37 @@ Examples:
         "bye": "Goodbye!"
     }
     print(dictionary["hello"])
+```
+## Visualising the Environment 
+For visualising the environment, our initial plan was to follow the environment visualiser in `cadet-frontend`. However we were unable to successfully integrate it - anytime a program was run with a breakpoint set, it would cause the frontend to error out.
+
+We decided to try developing the environment visualiser with a different approach by applying what we had learnt when implementing the Python built-in functions. We created a new built-in function `env()` in order to return the environment at that point in the program's execution. This works very similarly to the debbuger + environment visualiser tools that are used in the source-academy frontend.
+
+This function loops through the Context and seperates the different frames into that for the program (i.e. the global environment), and the function environments (if the `env()` function is called inside a function body). This function is especially useful when used in combination with the use of Python keywords.
+
+Example 1:
+``` python
+    a = 1
+    b = 2
+    def f():
+        c = 3
+        return env()
+    f()
+
+>>> {"f": {"c": 3}, "program": {"a": 1, "b": 2, "f": "function declaration"}}
+```
+
+Example 2:
+``` python
+    a = 1
+    b = "hello"
+    def f():
+        global a
+        a = a + 7
+    f()
+    env()
+
+>>> {"program": {"a": 8, "b": "hello", "f": "function declaration"}}
 ```
 
 Running the Project
