@@ -1,6 +1,6 @@
 # T3 Python 
 
-Note: Readers can open `README.html` file to read the printed version of the document. >br/>
+Note: Readers can open `README.html` file to read the printed version of the document. <br/>
 Read our full Developer Guide: [T3 Python Developer Guide](https://github.com/nus-cs4215/x-slang-t3-ss-zlx/wiki)
 
 ## Content
