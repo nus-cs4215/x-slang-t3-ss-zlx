@@ -3,7 +3,7 @@
 Note: Readers can open `README.html` file to read the printed version of the document. <br/>
 Read our full Developer Guide: [T3 Python Developer Guide](https://github.com/nus-cs4215/x-slang-t3-ss-zlx/wiki)
 
-## Content
+## Table of Contents
 - [Python 3 implemented in Typescript](#python-3-implemented-in-typescript)
 - [Why Python?](#why-python-)
 - [Usage](#usage)
