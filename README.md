@@ -4,8 +4,35 @@ Note: Readers can open `README.html` file to read the printed version of the doc
 Read our full Developer Guide: [T3 Python Developer Guide](https://github.com/nus-cs4215/x-slang-t3-ss-zlx/wiki)
 
 ## Content
+- [Python 3 implemented in Typescript](#python-3-implemented-in-typescript)
+- [Why Python?](#why-python-)
+- [Usage](#usage)
+- [User Manual](#user-manual)
+  * [Calculator](#calculator)
+  * [Variable Assignment and Reuse](#variable-assignment-and-reuse)
+  * [Python Built-in Data structures: Lists & Dictionaries](#python-built-in-data-structures--lists---dictionaries)
+  * [Python Built-in Functions](#python-built-in-functions)
+    + [`print` Function](#-print--function)
+    + [`range` Function](#-range--function)
+  * [Loops](#loops)
+    + [For Loop](#for-loop)
+    + [While Loop](#while-loop)
+  * [If Statement / Conditional Statement](#if-statement---conditional-statement)
+  * [Break / Continue / Pass Statement](#break---continue---pass-statement)
+    + [Break Statement](#break-statement)
+    + [Continue Statement](#continue-statement)
+    + [Pass Statement](#pass-statement)
+  * [Function Definition](#function-definition)
+  * [Variable Scoping Statements](#variable-scoping-statements)
+    + [Global Statement](#global-statement)
+    + [Nonlocal Statement](#nonlocal-statement)
+  * [Python For Loops](#python-for-loops)
+  * [Python Built-in Data structures: Lists & Dictionaries](#python-built-in-data-structures--lists---dictionaries-1)
+  * [Visualising the Environment](#visualising-the-environment)
+- [Testing](#testing)
+- [Error messages](#error-messages)
+- [Using your x-slang in local Source Academy](#using-your-x-slang-in-local-source-academy)
 
-[toc]
 
 ## Python 3 implemented in Typescript
 This page outlines our work done so far in implementing the Python 3 programming language in Typescript. This documentation serves as the User Manual for our project and contains various examples of what we have implemented thus far. For a more detailed discussion about our implementation logic, take a look at our Wiki.
